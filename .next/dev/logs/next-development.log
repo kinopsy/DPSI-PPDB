@@ -3,3 +3,6 @@
 {"timestamp":"00:02:19.050","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
 {"timestamp":"00:02:39.121","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
 {"timestamp":"00:03:45.246","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"00:57:04.560","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'D:\\dpsi1\\New folder\\Dokumentasi_SoTi_PPDB\\ppdb-next\\src\\app'"}
+{"timestamp":"00:57:04.571","source":"Server","level":"ERROR","message":"⨯ \"unhandledRejection:\" Error: ENOENT: no such file or directory, scandir 'D:\\dpsi1\\New folder\\Dokumentasi_SoTi_PPDB\\ppdb-next\\src\\app'"}
+{"timestamp":"00:57:04.577","source":"Server","level":"ERROR","message":"⨯ \"unhandledRejection: \" Error: ENOENT: no such file or directory, scandir 'D:\\dpsi1\\New folder\\Dokumentasi_SoTi_PPDB\\ppdb-next\\src\\app'"}
