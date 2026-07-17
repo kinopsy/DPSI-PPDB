@@ -1,0 +1,9 @@
+{
+  "/api/auth/login/route": "app/api/auth/login/route.js",
+  "/api/documents/route": "app/api/documents/route.js",
+  "/api/payments/route": "app/api/payments/route.js",
+  "/api/seed/route": "app/api/seed/route.js",
+  "/api/students/route": "app/api/students/route.js",
+  "/auth/login/page": "app/auth/login/page.js",
+  "/pendaftar/dashboard/page": "app/pendaftar/dashboard/page.js"
+}
