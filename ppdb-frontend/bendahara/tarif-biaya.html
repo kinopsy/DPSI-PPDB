@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tarif Biaya - PPDB Online</title>
+  <link rel="stylesheet" href="../assets/css/design-system.css">
+  <link rel="stylesheet" href="../assets/css/layout.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-brand">PPDB<span>Online</span></div>
+    <div class="navbar-nav" id="navLinks">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="verifikasi-pembayaran.html">Verifikasi Bayar</a>
+      <a href="tarif-biaya.html" class="active">Tarif Biaya</a>
+      <a href="audit-log.html">Audit Log</a>
+    </div>
+    <div class="navbar-user">
+      <div class="avatar" id="userAvatar"></div>
+      <span id="userName" class="hide-mobile"></span>
+      <button class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:#fff;border:none;" onclick="SessionManager.logout()">Keluar</button>
+    </div>
+    <button class="hamburger" onclick="document.getElementById('navLinks').classList.toggle('open')">&#9776;</button>
+  </nav>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-section"><div class="sidebar-section-title">Panel Keuangan</div></div>
+      <div class="sidebar-nav">
+        <a href="dashboard.html" class="sidebar-link"><span class="icon">&#9632;</span> Dashboard</a>
+        <a href="verifikasi-pembayaran.html" class="sidebar-link"><span class="icon">&#128179;</span> Verifikasi Bayar</a>
+        <a href="tarif-biaya.html" class="sidebar-link active"><span class="icon">&#128197;</span> Tarif Biaya</a>
+        <a href="audit-log.html" class="sidebar-link"><span class="icon">&#128202;</span> Audit Log</a>
+      </div>
+    </aside>
+
+    <main class="layout-main">
+      <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <h1>Pengaturan Tarif Biaya</h1>
+          <p>Konfigurasi komponen biaya PPDB. Perubahan akan tercatat di audit log.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openAddModal()">Tambah Komponen</button>
+      </div>
+
+      <div class="card">
+        <div class="card-body" style="padding:0;">
+          <table class="table">
+            <thead><tr><th>Komponen</th><th>Deskripsi</th><th>Nominal</th><th>Aksi</th></tr></thead>
+            <tbody id="tariffList"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:24px;">
+        <div class="card-header">Ringkasan Total</div>
+        <div class="card-body" id="totalSummary"></div>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-overlay" id="tariffModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modalTitle">Tambah Komponen Biaya</h3>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="tariffName">Nama Komponen</label>
+          <input type="text" id="tariffName" class="form-control" placeholder="Contoh: SPP Bulanan" required>
+        </div>
+        <div class="form-group">
+          <label for="tariffAmount">Nominal (Rp)</label>
+          <input type="number" id="tariffAmount" class="form-control" min="0" placeholder="0" required>
+        </div>
+        <div class="form-group">
+          <label for="tariffDesc">Deskripsi</label>
+          <textarea id="tariffDesc" class="form-control" rows="2" placeholder="Deskripsi singkat..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal()">Batal</button>
+        <button class="btn btn-primary" onclick="saveTariff()">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/js/mock-data.js"></script>
+  <script>
+    if (!SessionManager.requireAuth('bendahara')) throw new Error('Unauthorized');
+
+    const user = SessionManager.getUser();
+    document.getElementById('userAvatar').textContent = user.name.charAt(0);
+    document.getElementById('userName').textContent = user.name;
+
+    let editingId = null;
+
+    function renderTariffs() {
+      const tbody = document.getElementById('tariffList');
+      tbody.innerHTML = '';
+      let total = 0;
+
+      MockDB.tariffs.forEach(t => {
+        total += t.amount;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${t.component}</strong></td>
+          <td style="color:var(--text-muted);font-size:0.9375rem;">${t.description}</td>
+          <td style="font-weight:600;">${formatCurrency(t.amount)}</td>
+          <td>
+            <button class="btn btn-sm btn-outline" onclick="editTariff('${t.id}')">Edit</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteTariff('${t.id}')">Hapus</button>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('totalSummary').innerHTML = `
+        <div style="display:flex;justify-content:space-between;font-size:1.25rem;">
+          <strong>Total Komponen Biaya</strong>
+          <strong style="color:var(--primary);">${formatCurrency(total)}</strong>
+        </div>`;
+    }
+
+    renderTariffs();
+
+    function openAddModal() {
+      editingId = null;
+      document.getElementById('modalTitle').textContent = 'Tambah Komponen Biaya';
+      document.getElementById('tariffName').value = '';
+      document.getElementById('tariffAmount').value = '';
+      document.getElementById('tariffDesc').value = '';
+      document.getElementById('tariffModal').classList.add('active');
+    }
+
+    function editTariff(id) {
+      const t = MockDB.tariffs.find(t => t.id === id);
+      editingId = id;
+      document.getElementById('modalTitle').textContent = 'Edit Komponen Biaya';
+      document.getElementById('tariffName').value = t.component;
+      document.getElementById('tariffAmount').value = t.amount;
+      document.getElementById('tariffDesc').value = t.description;
+      document.getElementById('tariffModal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('tariffModal').classList.remove('active');
+      editingId = null;
+    }
+
+    function saveTariff() {
+      const name = document.getElementById('tariffName').value.trim();
+      const amount = parseInt(document.getElementById('tariffAmount').value);
+      const desc = document.getElementById('tariffDesc').value.trim();
+
+      if (!name || isNaN(amount) || amount < 0) {
+        showToast('Nama dan nominal wajib diisi dengan benar.', 'error');
+        return;
+      }
+
+      if (editingId) {
+        const t = MockDB.tariffs.find(t => t.id === editingId);
+        t.component = name;
+        t.amount = amount;
+        t.description = desc;
+      } else {
+        MockDB.tariffs.push({
+          id: 't' + String(MockDB.tariffs.length + 1).padStart(3, '0'),
+          component: name, amount: amount, description: desc
+        });
+      }
+
+      MockDB.auditLogs.unshift({
+        id: 'l' + String(MockDB.auditLogs.length + 1).padStart(3, '0'),
+        action: editingId ? 'Tarif Diubah' : 'Tarif Ditambahkan',
+        student: '-', amount: `${name}: ${formatCurrency(amount)}`,
+        date: new Date().toLocaleString('id-ID'),
+        officer: user.name
+      });
+
+      renderTariffs();
+      closeModal();
+      showToast(editingId ? 'Tarif berhasil diperbarui!' : 'Komponen biaya ditambahkan!');
+    }
+
+    function deleteTariff(id) {
+      if (!confirm('Hapus komponen biaya ini?')) return;
+      const t = MockDB.tariffs.find(t => t.id === id);
+      MockDB.tariffs = MockDB.tariffs.filter(t => t.id !== id);
+      renderTariffs();
+      showToast(`Komponen "${t.component}" dihapus.`);
+    }
+  </script>
+</body>
+</html>

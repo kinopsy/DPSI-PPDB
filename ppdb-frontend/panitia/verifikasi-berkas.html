@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verifikasi Berkas - PPDB Online</title>
+  <link rel="stylesheet" href="../assets/css/design-system.css">
+  <link rel="stylesheet" href="../assets/css/layout.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-brand">PPDB<span>Online</span></div>
+    <div class="navbar-nav" id="navLinks">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="verifikasi-berkas.html" class="active">Verifikasi</a>
+      <a href="kuota-dinamis.html">Kuota</a>
+      <a href="kelulusan.html">Kelulusan</a>
+      <a href="pengumuman.html">Pengumuman</a>
+    </div>
+    <div class="navbar-user">
+      <div class="avatar" id="userAvatar"></div>
+      <span id="userName" class="hide-mobile"></span>
+      <button class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:#fff;border:none;" onclick="SessionManager.logout()">Keluar</button>
+    </div>
+    <button class="hamburger" onclick="document.getElementById('navLinks').classList.toggle('open')">&#9776;</button>
+  </nav>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-section"><div class="sidebar-section-title">Panel Panitia</div></div>
+      <div class="sidebar-nav">
+        <a href="dashboard.html" class="sidebar-link"><span class="icon">&#9632;</span> Dashboard</a>
+        <a href="verifikasi-berkas.html" class="sidebar-link active"><span class="icon">&#128196;</span> Verifikasi Berkas</a>
+        <a href="kuota-dinamis.html" class="sidebar-link"><span class="icon">&#127919;</span> Kuota Dinamis</a>
+        <a href="kelulusan.html" class="sidebar-link"><span class="icon">&#10003;</span> Konsol Kelulusan</a>
+        <a href="pengumuman.html" class="sidebar-link"><span class="icon">&#128227;</span> Pengumuman</a>
+      </div>
+    </aside>
+
+    <main class="layout-main">
+      <div class="page-header">
+        <h1>Verifikasi Berkas Pendaftaran</h1>
+        <p>Setujui atau tolak berkas yang diunggah oleh calon siswa. Sertakan catatan jika menolak.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>Antrian Berkas</span>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-sm btn-outline filter-btn active" data-filter="all">Semua</button>
+            <button class="btn btn-sm btn-outline filter-btn" data-filter="menunggu">Menunggu</button>
+            <button class="btn btn-sm btn-outline filter-btn" data-filter="disetujui">Disetujui</button>
+            <button class="btn btn-sm btn-outline filter-btn" data-filter="ditolak">Ditolak</button>
+          </div>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <table class="table" id="docsTable">
+            <thead><tr><th>Nama Siswa</th><th>Jenis</th><th>File</th><th>Status</th><th>Catatan</th><th>Aksi</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-overlay" id="rejectModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Tolak Berkas</h3>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="rejectionNote">Alasan Penolakan</label>
+          <textarea id="rejectionNote" class="form-control" rows="3" placeholder="Jelaskan alasan penolakan..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal()">Batal</button>
+        <button class="btn btn-danger" onclick="confirmReject()">Tolak</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/js/mock-data.js"></script>
+  <script>
+    if (!SessionManager.requireAuth('panitia')) throw new Error('Unauthorized');
+
+    const user = SessionManager.getUser();
+    document.getElementById('userAvatar').textContent = user.name.charAt(0);
+    document.getElementById('userName').textContent = user.name;
+
+    let currentRejectId = null;
+    let currentFilter = 'all';
+
+    function renderDocs(filter) {
+      const tbody = document.querySelector('#docsTable tbody');
+      tbody.innerHTML = '';
+      let docs = MockDB.documents;
+      if (filter !== 'all') docs = docs.filter(d => d.verification_status === filter);
+
+      docs.forEach(doc => {
+        const student = MockDB.students.find(s => s.id === doc.student_id);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${student ? student.name : '-'}</td>
+          <td>${doc.file_type === 'kk' ? 'Kartu Keluarga' : 'Akta Kelahiran'}</td>
+          <td style="font-size:0.875rem;color:var(--text-muted);">${doc.file_path}</td>
+          <td>${getStatusBadge(doc.verification_status)}</td>
+          <td style="font-size:0.875rem;max-width:200px;">${doc.rejection_note || '-'}</td>
+          <td>
+            ${doc.verification_status === 'menunggu' ? `
+              <button class="btn btn-sm btn-secondary" onclick="approveDoc('${doc.id}')">Setujui</button>
+              <button class="btn btn-sm btn-danger" onclick="openReject('${doc.id}')">Tolak</button>
+            ` : '-'}
+          </td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    renderDocs(currentFilter);
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        currentFilter = this.dataset.filter;
+        renderDocs(currentFilter);
+      });
+    });
+
+    function approveDoc(docId) {
+      const doc = MockDB.documents.find(d => d.id === docId);
+      if (doc) {
+        doc.verification_status = 'disetujui';
+        doc.rejection_note = null;
+        renderDocs(currentFilter);
+        showToast('Berkas berhasil disetujui!');
+      }
+    }
+
+    function openReject(docId) {
+      currentRejectId = docId;
+      document.getElementById('rejectionNote').value = '';
+      document.getElementById('rejectModal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('rejectModal').classList.remove('active');
+      currentRejectId = null;
+    }
+
+    function confirmReject() {
+      const note = document.getElementById('rejectionNote').value.trim();
+      if (!note) {
+        showToast('Alasan penolakan wajib diisi.', 'error');
+        return;
+      }
+      const doc = MockDB.documents.find(d => d.id === currentRejectId);
+      if (doc) {
+        doc.verification_status = 'ditolak';
+        doc.rejection_note = note;
+        renderDocs(currentFilter);
+        closeModal();
+        showToast('Berkas ditolak dengan catatan.');
+      }
+    }
+  </script>
+</body>
+</html>

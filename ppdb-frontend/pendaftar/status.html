@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Status Kelulusan - PPDB Online</title>
+  <link rel="stylesheet" href="../assets/css/design-system.css">
+  <link rel="stylesheet" href="../assets/css/layout.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-brand">PPDB<span>Online</span></div>
+    <div class="navbar-nav" id="navLinks">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="biodata.html">Biodata</a>
+      <a href="dokumen.html">Dokumen</a>
+      <a href="pembayaran.html">Pembayaran</a>
+      <a href="status.html" class="active">Status</a>
+    </div>
+    <div class="navbar-user">
+      <div class="avatar" id="userAvatar"></div>
+      <span id="userName" class="hide-mobile"></span>
+      <button class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:#fff;border:none;" onclick="SessionManager.logout()">Keluar</button>
+    </div>
+    <button class="hamburger" onclick="document.getElementById('navLinks').classList.toggle('open')">&#9776;</button>
+  </nav>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-section"><div class="sidebar-section-title">Menu Utama</div></div>
+      <div class="sidebar-nav">
+        <a href="dashboard.html" class="sidebar-link"><span class="icon">&#9632;</span> Dashboard</a>
+        <a href="biodata.html" class="sidebar-link"><span class="icon">&#9998;</span> Biodata</a>
+        <a href="dokumen.html" class="sidebar-link"><span class="icon">&#128194;</span> Dokumen</a>
+        <a href="pembayaran.html" class="sidebar-link"><span class="icon">&#128179;</span> Pembayaran</a>
+        <a href="status.html" class="sidebar-link active"><span class="icon">&#10003;</span> Status Kelulusan</a>
+      </div>
+    </aside>
+
+    <main class="layout-main">
+      <div class="page-header">
+        <h1>Status Pendaftaran & Kelulusan</h1>
+        <p>Pantau status pendaftaran dan hasil kelulusan Anda di sini.</p>
+      </div>
+
+      <div id="statusContent"></div>
+
+      <div class="card" style="margin-top:24px;">
+        <div class="card-header">Detail Pendaftaran</div>
+        <div class="card-body" id="detailContent"></div>
+      </div>
+
+      <div style="display:flex;gap:12px;margin-top:24px;">
+        <a href="pembayaran.html" class="btn btn-outline btn-lg">Kembali</a>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/js/mock-data.js"></script>
+  <script>
+    if (!SessionManager.requireAuth('pendaftar')) throw new Error('Unauthorized');
+
+    const user = SessionManager.getUser();
+    document.getElementById('userAvatar').textContent = user.name.charAt(0);
+    document.getElementById('userName').textContent = user.name;
+
+    const student = MockDB.students.find(s => s.user_id === user.id) || MockDB.students[0];
+    const docs = getStudentDocs(student.id);
+    const payment = getStudentPayment(student.id);
+    const approvedDocs = docs.filter(d => d.verification_status === 'disetujui').length;
+
+    const statusEl = document.getElementById('statusContent');
+
+    if (student.pendaftaran_status === 'lulus') {
+      statusEl.innerHTML = `
+        <div class="card" style="border-left:4px solid var(--success);">
+          <div class="card-body" style="text-align:center;padding:40px;">
+            <div style="font-size:4rem;margin-bottom:16px;">&#127881;</div>
+            <h2 style="color:var(--success);margin-bottom:8px;">Selamat! Anda Dinyatakan Lulus</h2>
+            <p style="color:var(--text-muted);font-size:1.125rem;">Selamat kepada ${student.name}. Silakan melakukan daftar ulang sesuai jadwal yang ditentukan.</p>
+            <div style="margin-top:24px;padding:16px;background:var(--bg-gray);border-radius:var(--radius-md);display:inline-block;">
+              <p style="font-size:0.875rem;color:var(--text-muted);">Program yang diterima</p>
+              <p style="font-size:1.25rem;font-weight:700;color:var(--primary);">SMA - Program IPA</p>
+            </div>
+          </div>
+        </div>`;
+    } else if (student.pendaftaran_status === 'terverifikasi') {
+      statusEl.innerHTML = `
+        <div class="card" style="border-left:4px solid var(--primary);">
+          <div class="card-body" style="text-align:center;padding:40px;">
+            <div style="font-size:4rem;margin-bottom:16px;">&#128269;</div>
+            <h2 style="color:var(--primary);margin-bottom:8px;">Pendaftaran Sedang Diproses</h2>
+            <p style="color:var(--text-muted);font-size:1.125rem;">Pendaftaran Anda sudah lengkap dan sedang dalam proses verifikasi oleh panitia.</p>
+          </div>
+        </div>`;
+    } else if (student.pendaftaran_status === 'menunggu_verifikasi') {
+      statusEl.innerHTML = `
+        <div class="card" style="border-left:4px solid var(--warning);">
+          <div class="card-body" style="text-align:center;padding:40px;">
+            <div style="font-size:4rem;margin-bottom:16px;">&#9203;</div>
+            <h2 style="color:var(--warning);margin-bottom:8px;">Menunggu Verifikasi</h2>
+            <p style="color:var(--text-muted);font-size:1.125rem;">Berkas pendaftaran Anda sedang menunggu verifikasi. Lengkapi semua dokumen yang diperlukan.</p>
+          </div>
+        </div>`;
+    } else {
+      statusEl.innerHTML = `
+        <div class="card" style="border-left:4px solid var(--error);">
+          <div class="card-body" style="text-align:center;padding:40px;">
+            <div style="font-size:4rem;margin-bottom:16px;">&#9888;</div>
+            <h2 style="color:var(--error);margin-bottom:8px;">Berkas Belum Lengkap</h2>
+            <p style="color:var(--text-muted);font-size:1.125rem;">Silakan lengkapi berkas pendaftaran Anda yang masih kurang.</p>
+            <a href="dokumen.html" class="btn btn-primary" style="margin-top:16px;">Lengkapi Sekarang</a>
+          </div>
+        </div>`;
+    }
+
+    document.getElementById('detailContent').innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div>
+          <p style="font-size:0.8125rem;color:var(--text-muted);margin-bottom:4px;">Nama</p>
+          <p style="font-weight:600;">${student.name}</p>
+        </div>
+        <div>
+          <p style="font-size:0.8125rem;color:var(--text-muted);margin-bottom:4px;">NISN</p>
+          <p style="font-weight:600;">${student.nisn}</p>
+        </div>
+        <div>
+          <p style="font-size:0.8125rem;color:var(--text-muted);margin-bottom:4px;">Asal Sekolah</p>
+          <p style="font-weight:600;">${student.asal_sekolah}</p>
+        </div>
+        <div>
+          <p style="font-size:0.8125rem;color:var(--text-muted);margin-bottom:4px;">Status Pendaftaran</p>
+          <p>${getStatusBadge(student.pendaftaran_status)}</p>
+        </div>
+        <div>
+          <p style="font-size:0.8125rem;color:var(--text-muted);margin-bottom:4px;">Berkas</p>
+          <p>${approvedDocs}/${docs.length} dokumen disetujui</p>
+        </div>
+        <div>
+          <p style="font-size:0.8125rem;color:var(--text-muted);margin-bottom:4px;">Pembayaran</p>
+          <p>${getStatusBadge(payment ? payment.payment_status : 'belum')}</p>
+        </div>
+      </div>
+    `;
+  </script>
+</body>
+</html>

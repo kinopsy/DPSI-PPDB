@@ -1,0 +1,37 @@
+# dependencies
+ppdb-next/node_modules/
+ppdb-next/.pnp
+ppdb-next/.pnp.*
+ppdb-next/.yarn/*
+!ppdb-next/.yarn/patches
+!ppdb-next/.yarn/plugins
+!ppdb-next/.yarn/releases
+!ppdb-next/.yarn/versions
+
+# next.js
+ppdb-next/.next/
+ppdb-next/out/
+
+# production
+ppdb-next/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error-debug.log*
+yarn-error.log*
+
+# env
+ppdb-next/.env*
+.env*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+ppdb-next/next-env.d.ts

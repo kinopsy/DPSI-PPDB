@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pengumuman - PPDB Online</title>
+  <link rel="stylesheet" href="../assets/css/design-system.css">
+  <link rel="stylesheet" href="../assets/css/layout.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-brand">PPDB<span>Online</span></div>
+    <div class="navbar-nav" id="navLinks">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="verifikasi-berkas.html">Verifikasi</a>
+      <a href="kuota-dinamis.html">Kuota</a>
+      <a href="kelulusan.html">Kelulusan</a>
+      <a href="pengumuman.html" class="active">Pengumuman</a>
+    </div>
+    <div class="navbar-user">
+      <div class="avatar" id="userAvatar"></div>
+      <span id="userName" class="hide-mobile"></span>
+      <button class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:#fff;border:none;" onclick="SessionManager.logout()">Keluar</button>
+    </div>
+    <button class="hamburger" onclick="document.getElementById('navLinks').classList.toggle('open')">&#9776;</button>
+  </nav>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-section"><div class="sidebar-section-title">Panel Panitia</div></div>
+      <div class="sidebar-nav">
+        <a href="dashboard.html" class="sidebar-link"><span class="icon">&#9632;</span> Dashboard</a>
+        <a href="verifikasi-berkas.html" class="sidebar-link"><span class="icon">&#128196;</span> Verifikasi Berkas</a>
+        <a href="kuota-dinamis.html" class="sidebar-link"><span class="icon">&#127919;</span> Kuota Dinamis</a>
+        <a href="kelulusan.html" class="sidebar-link"><span class="icon">&#10003;</span> Konsol Kelulusan</a>
+        <a href="pengumuman.html" class="sidebar-link active"><span class="icon">&#128227;</span> Pengumuman</a>
+      </div>
+    </aside>
+
+    <main class="layout-main">
+      <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <h1>Manajemen Pengumuman</h1>
+          <p>Buat dan kelola pengumuman untuk calon siswa.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openCreateModal()">Buat Pengumuman</button>
+      </div>
+
+      <div id="announcementList"></div>
+    </main>
+  </div>
+
+  <div class="modal-overlay" id="createModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Buat Pengumuman Baru</h3>
+        <button class="modal-close" onclick="closeCreateModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="annTitle">Judul</label>
+          <input type="text" id="annTitle" class="form-control" placeholder="Judul pengumuman" required>
+        </div>
+        <div class="form-group">
+          <label for="annContent">Isi Pengumuman</label>
+          <textarea id="annContent" class="form-control" rows="5" placeholder="Tulis pengumuman..." required></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeCreateModal()">Batal</button>
+        <button class="btn btn-primary" onclick="publishNew()">Terbitkan</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/js/mock-data.js"></script>
+  <script>
+    if (!SessionManager.requireAuth('panitia')) throw new Error('Unauthorized');
+
+    const user = SessionManager.getUser();
+    document.getElementById('userAvatar').textContent = user.name.charAt(0);
+    document.getElementById('userName').textContent = user.name;
+
+    function renderAnnouncements() {
+      const el = document.getElementById('announcementList');
+      el.innerHTML = '';
+      MockDB.announcements.forEach(a => {
+        el.innerHTML += `
+          <div class="card" style="margin-bottom:12px;">
+            <div class="card-body">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <strong>${a.title}</strong>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <span class="badge ${a.published ? 'badge-success' : 'badge-warning'}">${a.published ? 'Diterbitkan' : 'Draft'}</span>
+                  <span style="font-size:0.8125rem;color:var(--text-light);">${formatDate(a.date)}</span>
+                </div>
+              </div>
+              <p style="color:var(--text-muted);font-size:0.9375rem;">${a.content}</p>
+            </div>
+          </div>`;
+      });
+    }
+
+    renderAnnouncements();
+
+    function openCreateModal() {
+      document.getElementById('annTitle').value = '';
+      document.getElementById('annContent').value = '';
+      document.getElementById('createModal').classList.add('active');
+    }
+
+    function closeCreateModal() {
+      document.getElementById('createModal').classList.remove('active');
+    }
+
+    function publishNew() {
+      const title = document.getElementById('annTitle').value.trim();
+      const content = document.getElementById('annContent').value.trim();
+
+      if (!title || !content) {
+        showToast('Judul dan isi pengumuman wajib diisi.', 'error');
+        return;
+      }
+
+      const today = new Date().toISOString().split('T')[0];
+      MockDB.announcements.unshift({
+        id: 'a' + String(MockDB.announcements.length + 1).padStart(3, '0'),
+        title, content, date: today, published: true
+      });
+
+      renderAnnouncements();
+      closeCreateModal();
+      showToast('Pengumuman berhasil diterbitkan!');
+    }
+  </script>
+</body>
+</html>

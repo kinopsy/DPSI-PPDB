@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kuota Dinamis - PPDB Online</title>
+  <link rel="stylesheet" href="../assets/css/design-system.css">
+  <link rel="stylesheet" href="../assets/css/layout.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-brand">PPDB<span>Online</span></div>
+    <div class="navbar-nav" id="navLinks">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="verifikasi-berkas.html">Verifikasi</a>
+      <a href="kuota-dinamis.html" class="active">Kuota</a>
+      <a href="kelulusan.html">Kelulusan</a>
+      <a href="pengumuman.html">Pengumuman</a>
+    </div>
+    <div class="navbar-user">
+      <div class="avatar" id="userAvatar"></div>
+      <span id="userName" class="hide-mobile"></span>
+      <button class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:#fff;border:none;" onclick="SessionManager.logout()">Keluar</button>
+    </div>
+    <button class="hamburger" onclick="document.getElementById('navLinks').classList.toggle('open')">&#9776;</button>
+  </nav>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-section"><div class="sidebar-section-title">Panel Panitia</div></div>
+      <div class="sidebar-nav">
+        <a href="dashboard.html" class="sidebar-link"><span class="icon">&#9632;</span> Dashboard</a>
+        <a href="verifikasi-berkas.html" class="sidebar-link"><span class="icon">&#128196;</span> Verifikasi Berkas</a>
+        <a href="kuota-dinamis.html" class="sidebar-link active"><span class="icon">&#127919;</span> Kuota Dinamis</a>
+        <a href="kelulusan.html" class="sidebar-link"><span class="icon">&#10003;</span> Konsol Kelulusan</a>
+        <a href="pengumuman.html" class="sidebar-link"><span class="icon">&#128227;</span> Pengumuman</a>
+      </div>
+    </aside>
+
+    <main class="layout-main">
+      <div class="page-header">
+        <h1>Pengaturan Kuota Dinamis</h1>
+        <p>Atur kuota maksimal per program studi. Kuota dapat diubah kapan saja saat pendaftaran aktif.</p>
+      </div>
+
+      <div class="alert alert-warning">
+        <strong>Aturan Bisnis:</strong> Penurunan kuota di bawah jumlah siswa yang sudah dinyatakan lulus akan ditolak oleh sistem.
+      </div>
+
+      <div id="quotaList"></div>
+    </main>
+  </div>
+
+  <div class="modal-overlay" id="editModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Edit Kuota: <span id="editProgram"></span></h3>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="editQuota">Kuota Maksimal</label>
+          <input type="number" id="editQuota" class="form-control" min="0">
+        </div>
+        <div class="form-group">
+          <label for="editDeadline">Batas Waktu</label>
+          <input type="date" id="editDeadline" class="form-control">
+        </div>
+        <div id="editError" class="alert alert-error" style="display:none;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal()">Batal</button>
+        <button class="btn btn-primary" onclick="saveQuota()">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/js/mock-data.js"></script>
+  <script>
+    if (!SessionManager.requireAuth('panitia')) throw new Error('Unauthorized');
+
+    const user = SessionManager.getUser();
+    document.getElementById('userAvatar').textContent = user.name.charAt(0);
+    document.getElementById('userName').textContent = user.name;
+
+    let currentEditId = null;
+
+    function renderQuotas() {
+      const el = document.getElementById('quotaList');
+      el.innerHTML = '';
+      MockDB.quotas.forEach(q => {
+        const pct = Math.round((q.current_count / q.max_quota) * 100);
+        const color = pct > 90 ? 'var(--error)' : pct > 70 ? 'var(--warning)' : 'var(--secondary)';
+        el.innerHTML += `
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-body">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                <div>
+                  <h3 style="font-size:1.125rem;">${q.program}</h3>
+                  <p style="font-size:0.875rem;color:var(--text-muted);">Batas waktu: ${formatDate(q.deadline)}</p>
+                </div>
+                <button class="btn btn-sm btn-outline" onclick="openEdit('${q.id}')">Edit</button>
+              </div>
+              <div style="display:flex;gap:32px;margin-bottom:12px;">
+                <div>
+                  <p style="font-size:0.75rem;color:var(--text-light);text-transform:uppercase;">Terisi</p>
+                  <p style="font-size:1.5rem;font-weight:700;color:var(--primary);">${q.current_count}</p>
+                </div>
+                <div>
+                  <p style="font-size:0.75rem;color:var(--text-light);text-transform:uppercase;">Maksimal</p>
+                  <p style="font-size:1.5rem;font-weight:700;">${q.max_quota}</p>
+                </div>
+                <div>
+                  <p style="font-size:0.75rem;color:var(--text-light);text-transform:uppercase;">Sisa</p>
+                  <p style="font-size:1.5rem;font-weight:700;color:${q.max_quota - q.current_count < 10 ? 'var(--error)' : 'var(--success)'};">${q.max_quota - q.current_count}</p>
+                </div>
+              </div>
+              <div style="background:var(--bg-gray);height:10px;border-radius:5px;overflow:hidden;">
+                <div style="height:100%;width:${pct}%;background:${color};border-radius:5px;transition:width 0.3s;"></div>
+              </div>
+              <p style="font-size:0.8125rem;color:var(--text-muted);margin-top:6px;">${pct}% terisi</p>
+            </div>
+          </div>`;
+      });
+    }
+
+    renderQuotas();
+
+    function openEdit(quotaId) {
+      currentEditId = quotaId;
+      const q = MockDB.quotas.find(q => q.id === quotaId);
+      document.getElementById('editProgram').textContent = q.program;
+      document.getElementById('editQuota').value = q.max_quota;
+      document.getElementById('editDeadline').value = q.deadline;
+      document.getElementById('editError').style.display = 'none';
+      document.getElementById('editModal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('editModal').classList.remove('active');
+      currentEditId = null;
+    }
+
+    function saveQuota() {
+      const newQuota = parseInt(document.getElementById('editQuota').value);
+      const newDeadline = document.getElementById('editDeadline').value;
+      const q = MockDB.quotas.find(q => q.id === currentEditId);
+      const errorEl = document.getElementById('editError');
+
+      if (isNaN(newQuota) || newQuota < 0) {
+        errorEl.textContent = 'Kuota harus berupa angka positif.';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      if (newQuota < q.current_count) {
+        errorEl.textContent = `Kuota tidak boleh lebih rendah dari jumlah lulus saat ini (${q.current_count}).`;
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      q.max_quota = newQuota;
+      q.deadline = newDeadline;
+      renderQuotas();
+      closeModal();
+      showToast(`Kuota ${q.program} berhasil diperbarui!`);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Audit Log - PPDB Online</title>
+  <link rel="stylesheet" href="../assets/css/design-system.css">
+  <link rel="stylesheet" href="../assets/css/layout.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-brand">PPDB<span>Online</span></div>
+    <div class="navbar-nav" id="navLinks">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="verifikasi-pembayaran.html">Verifikasi Bayar</a>
+      <a href="tarif-biaya.html">Tarif Biaya</a>
+      <a href="audit-log.html" class="active">Audit Log</a>
+    </div>
+    <div class="navbar-user">
+      <div class="avatar" id="userAvatar"></div>
+      <span id="userName" class="hide-mobile"></span>
+      <button class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:#fff;border:none;" onclick="SessionManager.logout()">Keluar</button>
+    </div>
+    <button class="hamburger" onclick="document.getElementById('navLinks').classList.toggle('open')">&#9776;</button>
+  </nav>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-section"><div class="sidebar-section-title">Panel Keuangan</div></div>
+      <div class="sidebar-nav">
+        <a href="dashboard.html" class="sidebar-link"><span class="icon">&#9632;</span> Dashboard</a>
+        <a href="verifikasi-pembayaran.html" class="sidebar-link"><span class="icon">&#128179;</span> Verifikasi Bayar</a>
+        <a href="tarif-biaya.html" class="sidebar-link"><span class="icon">&#128197;</span> Tarif Biaya</a>
+        <a href="audit-log.html" class="sidebar-link active"><span class="icon">&#128202;</span> Audit Log</a>
+      </div>
+    </aside>
+
+    <main class="layout-main">
+      <div class="page-header">
+        <h1>Audit Log Keuangan</h1>
+        <p>Catatan semua aktivitas keuangan terkait pembayaran dan pengaturan tarif.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>Riwayat Aktivitas</span>
+          <button class="btn btn-sm btn-outline" onclick="exportLog()">Export CSV</button>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <table class="table">
+            <thead><tr><th>Waktu</th><th>Aksi</th><th>Siswa/Komponen</th><th>Detail</th><th>Penanggung Jawab</th></tr></thead>
+            <tbody id="logList"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/js/mock-data.js"></script>
+  <script>
+    if (!SessionManager.requireAuth('bendahara')) throw new Error('Unauthorized');
+
+    const user = SessionManager.getUser();
+    document.getElementById('userAvatar').textContent = user.name.charAt(0);
+    document.getElementById('userName').textContent = user.name;
+
+    function renderLogs() {
+      const tbody = document.getElementById('logList');
+      tbody.innerHTML = '';
+      MockDB.auditLogs.forEach(log => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="font-size:0.875rem;white-space:nowrap;">${log.date}</td>
+          <td><span class="badge badge-info">${log.action}</span></td>
+          <td>${log.student}</td>
+          <td style="font-weight:500;">${log.amount}</td>
+          <td style="font-size:0.875rem;">${log.officer}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    renderLogs();
+
+    function exportLog() {
+      let csv = 'Waktu,Aksi,Siswa,Detail,Penanggung Jawab\n';
+      MockDB.auditLogs.forEach(log => {
+        csv += `"${log.date}","${log.action}","${log.student}","${log.amount}","${log.officer}"\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'audit_log_ppdb.csv';
+      a.click(); URL.revokeObjectURL(url);
+      showToast('Audit log berhasil di-export!');
+    }
+  </script>
+</body>
+</html>

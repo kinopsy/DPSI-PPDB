@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload Dokumen - PPDB Online</title>
+  <link rel="stylesheet" href="../assets/css/design-system.css">
+  <link rel="stylesheet" href="../assets/css/layout.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-brand">PPDB<span>Online</span></div>
+    <div class="navbar-nav" id="navLinks">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="biodata.html">Biodata</a>
+      <a href="dokumen.html" class="active">Dokumen</a>
+      <a href="pembayaran.html">Pembayaran</a>
+      <a href="status.html">Status</a>
+    </div>
+    <div class="navbar-user">
+      <div class="avatar" id="userAvatar"></div>
+      <span id="userName" class="hide-mobile"></span>
+      <button class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:#fff;border:none;" onclick="SessionManager.logout()">Keluar</button>
+    </div>
+    <button class="hamburger" onclick="document.getElementById('navLinks').classList.toggle('open')">&#9776;</button>
+  </nav>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-section"><div class="sidebar-section-title">Menu Utama</div></div>
+      <div class="sidebar-nav">
+        <a href="dashboard.html" class="sidebar-link"><span class="icon">&#9632;</span> Dashboard</a>
+        <a href="biodata.html" class="sidebar-link"><span class="icon">&#9998;</span> Biodata</a>
+        <a href="dokumen.html" class="sidebar-link active"><span class="icon">&#128194;</span> Dokumen</a>
+        <a href="pembayaran.html" class="sidebar-link"><span class="icon">&#128179;</span> Pembayaran</a>
+        <a href="status.html" class="sidebar-link"><span class="icon">&#10003;</span> Status Kelulusan</a>
+      </div>
+    </aside>
+
+    <main class="layout-main">
+      <div class="page-header">
+        <h1>Unggah Berkas Wajib</h1>
+        <p>Unggah Kartu Keluarga (KK) dan Akta Kelahiran dalam format JPG, PNG, atau PDF (maks 2MB).</p>
+      </div>
+
+      <div class="grid grid-2">
+        <div class="card">
+          <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+            <span>Kartu Keluarga (KK)</span>
+            <span id="kkStatus"></span>
+          </div>
+          <div class="card-body">
+            <div id="kkUploadZone" class="upload-zone" onclick="document.getElementById('kkFile').click()">
+              <div class="upload-icon">&#128196;</div>
+              <div class="upload-text">Klik atau seret file ke sini</div>
+              <div class="upload-hint">JPG, PNG, atau PDF, maks 2MB</div>
+            </div>
+            <input type="file" id="kkFile" accept=".jpg,.jpeg,.png,.pdf" style="display:none;" onchange="handleUpload(this, 'kk')">
+            <div id="kkPreview" style="display:none;margin-top:16px;text-align:center;"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+            <span>Akta Kelahiran</span>
+            <span id="aktaStatus"></span>
+          </div>
+          <div class="card-body">
+            <div id="aktaUploadZone" class="upload-zone" onclick="document.getElementById('aktaFile').click()">
+              <div class="upload-icon">&#128196;</div>
+              <div class="upload-text">Klik atau seret file ke sini</div>
+              <div class="upload-hint">JPG, PNG, atau PDF, maks 2MB</div>
+            </div>
+            <input type="file" id="aktaFile" accept=".jpg,.jpeg,.png,.pdf" style="display:none;" onchange="handleUpload(this, 'akta')">
+            <div id="aktaPreview" style="display:none;margin-top:16px;text-align:center;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:24px;">
+        <div class="card-header">Catatan Verifikasi</div>
+        <div class="card-body">
+          <div id="rejectionNotes" style="color:var(--text-muted);">Tidak ada catatan.</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;margin-top:24px;">
+        <button class="btn btn-primary btn-lg" onclick="submitDocs()">Simpan & Lanjutkan</button>
+        <a href="biodata.html" class="btn btn-outline btn-lg">Kembali</a>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/js/mock-data.js"></script>
+  <script>
+    if (!SessionManager.requireAuth('pendaftar')) throw new Error('Unauthorized');
+
+    const user = SessionManager.getUser();
+    document.getElementById('userAvatar').textContent = user.name.charAt(0);
+    document.getElementById('userName').textContent = user.name;
+
+    const student = MockDB.students.find(s => s.user_id === user.id) || MockDB.students[0];
+    const docs = getStudentDocs(student.id);
+
+    docs.forEach(doc => {
+      if (doc.file_type === 'kk') {
+        document.getElementById('kkStatus').innerHTML = getStatusBadge(doc.verification_status);
+        if (doc.rejection_note) {
+          document.getElementById('rejectionNotes').innerHTML = `<div class="alert alert-error" style="margin:0;">KK: ${doc.rejection_note}</div>`;
+        }
+      } else if (doc.file_type === 'akta') {
+        document.getElementById('aktaStatus').innerHTML = getStatusBadge(doc.verification_status);
+        if (doc.rejection_note) {
+          document.getElementById('rejectionNotes').innerHTML += `<div class="alert alert-error" style="margin:8px 0 0;">Akta: ${doc.rejection_note}</div>`;
+        }
+      }
+    });
+
+    function handleUpload(input, type) {
+      const file = input.files[0];
+      if (!file) return;
+
+      if (file.size > 2 * 1024 * 1024) {
+        showToast('Ukuran file maksimal 2MB.', 'error');
+        input.value = '';
+        return;
+      }
+
+      const preview = document.getElementById(type + 'Preview');
+      const zone = document.getElementById(type + 'UploadZone');
+
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          preview.innerHTML = `<img src="${e.target.result}" class="thumbnail" style="width:100%;max-width:300px;height:auto;"><p style="margin-top:8px;font-size:0.875rem;color:var(--text-muted);">${file.name}</p>`;
+          preview.style.display = 'block';
+          zone.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+      } else {
+        preview.innerHTML = `<div style="padding:20px;background:var(--bg-gray);border-radius:var(--radius-md);"><p style="font-size:0.9375rem;">${file.name}</p><p style="font-size:0.8125rem;color:var(--text-muted);">PDF file</p></div>`;
+        preview.style.display = 'block';
+        zone.style.display = 'none';
+      }
+
+      document.getElementById(type + 'Status').innerHTML = '<span class="badge badge-warning">Dikirim</span>';
+    }
+
+    function submitDocs() {
+      showToast('Dokumen berhasil disimpan!');
+      setTimeout(() => { window.location.href = 'pembayaran.html'; }, 1500);
+    }
+
+    ['kkUploadZone', 'aktaUploadZone'].forEach(id => {
+      const zone = document.getElementById(id);
+      zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('dragover'); });
+      zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+      zone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        zone.classList.remove('dragover');
+        const type = id.replace('UploadZone', '');
+        const input = document.getElementById(type + 'File');
+        input.files = e.dataTransfer.files;
+        handleUpload(input, type);
+      });
+    });
+  </script>
+</body>
+</html>
