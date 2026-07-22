@@ -13,11 +13,10 @@ const NAV_ITEMS: Record<string, { label: string; href: string; icon: string }[]>
     { label: 'Status', href: '/pendaftar/status', icon: '📊' },
   ],
   panitia: [
-    { label: 'Dashboard', href: '/panitia/dashboard', icon: '🏠' },
     { label: 'Verifikasi Berkas', href: '/panitia/verifikasi-berkas', icon: '✅' },
     { label: 'Kuota Dinamis', href: '/panitia/kuota-dinamis', icon: '📋' },
     { label: 'Kelulusan', href: '/panitia/kelulusan', icon: '🎓' },
-    { label: 'Buat Pengumuman', href: '/panitia/pengumuman', icon: '✍️' },
+    { label: 'Pengumuman', href: '/panitia/pengumuman', icon: '✍️' },
   ],
   bendahara: [
     { label: 'Dashboard', href: '/bendahara/dashboard', icon: '🏠' },
@@ -32,7 +31,6 @@ const NAV_ITEMS: Record<string, { label: string; href: string; icon: string }[]>
 
 const BOTTOM_LINKS: { label: string; href: string; icon: string; roles?: string[] }[] = [
   { label: 'Pengumuman', href: '/pengumuman', icon: '📢' },
-  { label: 'Beranda', href: '/', icon: '🌐', roles: ['panitia'] },
 ];
 
 export default function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {

@@ -181,6 +181,18 @@ export async function apiCreateAnnouncement(title: string, content: string) {
   return { success: true, id: ref.id, ...snap.data() };
 }
 
+export async function apiUpdateAnnouncement(id: string, data: { title?: string; content?: string }) {
+  const ref = doc(db, 'announcements', id);
+  await updateDoc(ref, { ...data, updatedAt: serverTimestamp() });
+  const snap = await getDoc(ref);
+  return { success: true, id, ...snap.data() };
+}
+
+export async function apiDeleteAnnouncement(id: string) {
+  await deleteDoc(doc(db, 'announcements', id));
+  return { success: true };
+}
+
 export async function apiGetAuditLogs(): Promise<any[]> {
   const q = query(collection(db, 'auditLogs'), orderBy('date', 'desc'));
   const snap = await getDocs(q);

@@ -21,7 +21,7 @@ interface AuthUser {
 interface AuthContextType {
   user: AuthUser | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; message?: string; role?: string }>;
   register: (name: string, email: string, password: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
 }
@@ -29,7 +29,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
-  login: async () => ({ success: false }),
+  login: async () => ({ success: false, role: '' }),
   register: async () => ({ success: false }),
   logout: () => {},
 });
@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsub = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
         const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-        if (userDoc.exists()) {
+        if (auth.currentUser?.uid === firebaseUser.uid && userDoc.exists()) {
           const data = userDoc.data();
           setUser({ id: firebaseUser.uid, name: data.name, email: firebaseUser.email!, role: data.role });
         }
@@ -58,11 +58,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const cred = await signInWithEmailAndPassword(auth, email, password);
       const userDoc = await getDoc(doc(db, 'users', cred.user.uid));
-      if (userDoc.exists()) {
-        const data = userDoc.data();
-        setUser({ id: cred.user.uid, name: data.name, email: cred.user.email!, role: data.role });
-      }
-      return { success: true };
+      const role = userDoc.exists() ? userDoc.data().role : 'pendaftar';
+      setUser({ id: cred.user.uid, name: cred.user.displayName || '', email: cred.user.email!, role });
+      return { success: true, role };
     } catch (err: any) {
       const msg =
         err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential'
@@ -83,7 +81,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role: 'pendaftar',
         createdAt: serverTimestamp(),
       });
-      setUser({ id: cred.user.uid, name, email, role: 'pendaftar' });
+      await signOut(auth);
+      setUser(null);
       return { success: true };
     } catch (err: any) {
       const msg =

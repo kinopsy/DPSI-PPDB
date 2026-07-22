@@ -1,11 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 
 export default function RegisterPage() {
-  const { register } = useAuth();
+  const { register, user, loading: authLoading } = useAuth();
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      window.location.href = `/${user.role}/dashboard`;
+    }
+  }, [user, authLoading]);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -21,7 +27,8 @@ export default function RegisterPage() {
     setLoading(true);
     const result = await register(name, email, password);
     if (result.success) {
-      window.location.href = '/pendaftar/dashboard';
+      alert('Registrasi berhasil! Silakan login.');
+      window.location.href = '/auth/login';
     } else {
       setError(result.message || 'Registrasi gagal');
       setLoading(false);

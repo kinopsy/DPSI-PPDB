@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import Sidebar from './Sidebar';
 
@@ -36,7 +37,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         <header className="hidden md:flex bg-white border-b border-slate-200/60 px-8 h-16 items-center justify-between sticky top-0 z-20">
           <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="Logo" className="w-10 h-10 rounded-xl object-contain bg-white p-1 shadow-lg shadow-[#1D20DA]/20" />
+            <Image
+              src="/logo.png"
+              alt="Logo SD Muhammadiyah Karangkajen"
+              width={40}
+              height={40}
+              priority
+              className="w-10 h-10 rounded-xl object-contain bg-white p-1 shadow-lg shadow-[#1D20DA]/20"
+            />
             <div>
               <h1 className="text-sm font-semibold text-slate-800 capitalize">Panel {user.role}</h1>
               <p className="text-xs text-slate-400">SD Muhammadiyah Karangkajen</p>

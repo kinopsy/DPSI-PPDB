@@ -1,15 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 
 export default function LoginPage() {
-  const { login, user } = useAuth();
+  const { login, user, loading: authLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      window.location.href = `/${user.role}/dashboard`;
+    }
+  }, [user, authLoading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,8 +24,8 @@ export default function LoginPage() {
 
     setLoading(true);
     const result = await login(email, password);
-    if (result.success && user) {
-      window.location.href = `/${user.role}/dashboard`;
+    if (result.success) {
+      window.location.href = `/${result.role}/dashboard`;
     } else {
       setError(result.message || 'Login gagal');
       setLoading(false);
