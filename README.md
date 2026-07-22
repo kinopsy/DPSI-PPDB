@@ -12,6 +12,7 @@ Aplikasi PPDB Online untuk **SD Muhammadiyah Karangkajen Yogyakarta**. Dibangun 
 ## Daftar Isi
 
 - [Fitur](#fitur)
+- [Source of Truth (SoT)](#source-of-truth-sot)
 - [Installation](#installation)
 - [Folder Structure](#folder-structure)
 - [Architecture](#architecture)
@@ -49,6 +50,27 @@ Registrasi → Login → Pengisian Biodata → Upload Berkas → Verifikasi Berk
 | Panitia | `haidar@gmail.com` | `123456` |
 | Bendahara | `sudrajat@user.com` | `123456` |
 | Kepala Sekolah | `alfiardichannel@gmail.com` | `12345678` |
+
+## Source of Truth (SoT)
+
+Dokumen-dokumen berikut didefinisikan mengikuti metodologi **Chain of Truth** (faridsurya-dev). Setiap SoT merupakan validasi dari artifact sebelumnya, menghubungkan kebutuhan bisnis hingga implementasi teknis secara end-to-end.
+
+| SoT | Dokumen | Deskripsi |
+|-----|---------|-----------|
+| **SoT-1** | [`SoT-1_Validated_SRS.md`](docs/sot/SoT-1_Validated_SRS.md) | Software Requirements Specification — 18 fitur, 4 role, business rules, NFR |
+| **SoT-2** | [`SoT-2_Validated_Information_Architecture.md`](docs/sot/SoT-2_Validated_Information_Architecture.md) | Information Architecture — 5 modul, 19 routes, site map, routing rules |
+| **SoT-3** | [`SoT-3_Validated_Design_System.md`](docs/sot/SoT-3_Validated_Design_System.md) | Design System — color palette, typography, component library, responsive breakpoints |
+| **SoT-4** | [`SoT-4_Validated_User_Flows.md`](docs/sot/SoT-4_Validated_User_Flows.md) | User Flow Specifications — 7 use cases (UC-001 s/d UC-007), flow detail, business rules |
+| **SoT-5** | [`SoT-5_Validated_Prototype.md`](docs/sot/SoT-5_Validated_Prototype.md) | Prototype Reference — page-by-page mapping, shared components, data flow diagrams |
+| **SoT-6** | [`SoT-6_Validated_Data_Model.md`](docs/sot/SoT-6_Validated_Data_Model.md) | Data Model — 8 Firestore collections, field definitions, relationships, indexes |
+| **SoT-7** | [`SoT-7_Validated_UCIC.md`](docs/sot/SoT-7_Validated_UCIC.md) | Use Case Integration Contract — mapping UC → UI → DB → API, 18 API functions |
+
+**Koneksi antar SoT:**
+```
+SoT-1 (SRS) → SoT-2 (IA) → SoT-3 (Design System)
+                                    ↓
+SoT-4 (User Flows) → SoT-5 (Prototype) → SoT-6 (Data Model) → SoT-7 (UCIC)
+```
 
 ## Installation
 
@@ -97,14 +119,23 @@ python -m http.server 8000
 ```
 DPSI-PPDB/
 ├── docs/                               # Dokumen proyek
-│   ├── 01-requirements/                # SRS (SoT-1)
-│   ├── 02-architecture/                # IA (SoT-2), SAD (SoT-5)
-│   ├── 03-design/                      # Design System (SoT-3)
-│   ├── 04-user-flows/                  # User Flows (SoT-4)
-│   ├── 05-api/                         # API Contract (SoT-6)
-│   ├── 06-integration/                 # Integration (SoT-7)
-│   ├── analisis_kebutuhan/             # Analisis Kebutuhan
-│   ├── class_diagram/                  # Class Diagram & Data Model
+│   ├── sot/                            # Source of Truth (Chain of Truth)
+│   │   ├── SoT-1_Validated_SRS.md
+│   │   ├── SoT-2_Validated_Information_Architecture.md
+│   │   ├── SoT-3_Validated_Design_System.md
+│   │   ├── SoT-4_Validated_User_Flows.md
+│   │   ├── SoT-5_Validated_Prototype.md
+│   │   ├── SoT-6_Validated_Data_Model.md
+│   │   └── SoT-7_Validated_UCIC.md
+│   ├── 01-requirements/                # SRS (SoT-1) — legacy
+│   ├── 02-architecture/                # IA (SoT-2), SAD (SoT-5) — legacy
+│   ├── 03-design/                      # Design System (SoT-3) — legacy
+│   ├── 04-user-flows/                  # User Flows (SoT-4) — legacy
+│   ├── 05-api/                         # API Contract (SoT-6) — legacy
+│   ├── 06-integration/                 # Integration (SoT-7) — legacy
+│   ├── AK/                             # Analisis Kebutuhan (merged Fase 1 + Praktikum 1)
+│   ├── analisis_kebutuhan/             # Analisis Kebutuhan — original
+│   ├── class_diagram/                  # Class Diagram & Data Model (Firestore)
 │   └── observasi/                      # Transkrip Wawancara
 ├── ppdb-next/                          # Aplikasi utama (Next.js)
 │   ├── src/
