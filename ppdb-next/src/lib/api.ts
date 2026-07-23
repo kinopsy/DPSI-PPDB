@@ -141,10 +141,21 @@ export async function apiVerifyPayment(paymentId: string, status: string, office
       studentName = studentSnap.data().name || studentName;
     }
 
+    const amount = data.amount || 0;
+    const tariffSnap = await getDocs(collection(db, 'tariffs'));
+    const firstTariff = tariffSnap.docs[0]?.data();
+    const resolvedAmount = amount > 0 ? amount : (firstTariff?.amount || 250000);
+
+    if (!data.amount && firstTariff?.amount) {
+      await updateDoc(ref, { amount: firstTariff.amount });
+    }
+
     await addDoc(collection(db, 'auditLogs'), {
       action: status === 'lunas' ? 'Pembayaran Diverifikasi' : 'Pembayaran Ditolak',
       student: studentName,
-      amount: data.amount || 0,
+      student_id: data.student_id,
+      amount: resolvedAmount,
+      proof_file_path: data.proof_file_path || null,
       date: new Date().toISOString(),
       officer: officer || '',
       note: note || null,
