@@ -10,7 +10,7 @@ import Link from 'next/link';
 export default function PanitiaDashboard() {
   const { user } = useAuth();
   const router = useRouter();
-  const [stats, setStats] = useState({ total: 0, verified: 0, pending: 0, passed: 0, pendingDocs: 0 });
+  const [stats, setStats] = useState({ total: 0, verified: 0, pending: 0, passed: 0, pendingStudents: 0 });
 
   useEffect(() => {
     if (!user || user.role !== 'panitia') { router.push('/auth/login'); return; }
@@ -31,13 +31,13 @@ export default function PanitiaDashboard() {
         if (!byStudent[d.student_id]) byStudent[d.student_id] = [];
         byStudent[d.student_id].push(d.verification_status);
       });
-      let verified = 0, pending = 0, pendingDocs = 0;
+      let verified = 0, pending = 0, pendingStudents = 0;
       Object.values(byStudent).forEach((statuses: string[]) => {
         if (statuses.every(s => s === 'disetujui')) verified++;
-        else if (statuses.some(s => s === 'menunggu')) pending++;
-        pendingDocs += statuses.filter(s => s === 'menunggu').length;
+        else if (statuses.some(s => s === 'menunggu')) { pending++; pendingStudents++; }
+        else pending++;
       });
-      setStats(prev => ({ ...prev, verified, pending, pendingDocs }));
+      setStats(prev => ({ ...prev, verified, pending, pendingStudents }));
     });
 
     return () => { unsubStudents(); unsubDocs(); };
@@ -73,7 +73,7 @@ export default function PanitiaDashboard() {
       <h3 className="text-sm font-semibold text-slate-800 uppercase tracking-wider mb-4">Aksi Cepat</h3>
       <div className="grid md:grid-cols-2 gap-4">
         {[
-          { href: '/panitia/verifikasi-berkas', icon: '✅', title: 'Verifikasi Berkas', desc: `${stats.pendingDocs} menunggu`, color: 'bg-blue-50' },
+          { href: '/panitia/verifikasi-berkas', icon: '✅', title: 'Verifikasi Berkas', desc: `${stats.pendingStudents} antrean`, color: 'bg-blue-50' },
           { href: '/panitia/kelulusan', icon: '🎓', title: 'Kelulusan', desc: 'Tentukan kelulusan', color: 'bg-blue-50' },
           { href: '/panitia/kuota-dinamis', icon: '📋', title: 'Kuota Dinamis', desc: 'Atur kuota', color: 'bg-violet-50' },
           { href: '/panitia/pengumuman', icon: '✍️', title: 'Buat Pengumuman', desc: 'Kelola pengumuman', color: 'bg-amber-50' },

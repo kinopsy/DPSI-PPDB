@@ -34,6 +34,8 @@ export default function VerifikasiBerkasPage() {
 
   if (!user) return null;
 
+  const pendingDocsTotal = documents.filter((d: any) => d.verification_status === 'menunggu').length;
+
   const studentDocs = students.map(s => ({
     student: s,
     docs: documents.filter((d: any) => d.student_id === s.id),
@@ -46,10 +48,6 @@ export default function VerifikasiBerkasPage() {
     setNote('');
     setToast({ message: `Berkas ${verifyModal.action === 'disetujui' ? 'disetujui' : 'ditolak'}`, type: 'success' });
   };
-
-  const isImage = (path: string) => /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(path) || path.includes('cloudinary');
-
-  const IMG_BASE = 'https://res.cloudinary.com/fb73ycvg/image/upload/w_200,h_150,c_fill/';
 
   const getThumb = (path: string) => {
     if (!path) return null;
@@ -70,6 +68,13 @@ export default function VerifikasiBerkasPage() {
       </div>
 
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
+      {pendingDocsTotal > 0 && (
+        <div className="bg-amber-50 border border-amber-100 rounded-2xl px-5 py-3 mb-6 flex items-center gap-3">
+          <span className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 font-bold text-sm">{pendingDocsTotal}</span>
+          <span className="text-amber-700 text-sm font-medium">dokumen menunggu verifikasi</span>
+        </div>
+      )}
 
       {studentDocs.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-12 text-center">
