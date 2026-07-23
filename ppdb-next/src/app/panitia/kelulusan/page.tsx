@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { apiGetStudents, apiUpdateStudent } from '@/lib/api';
+import { apiGetStudents, apiUpdateStudent, apiGetQuotas, apiUpdateQuotaCount } from '@/lib/api';
 import { StatusBadge, Toast } from '@/components/UI';
 
 export default function KelulusanPage() {
@@ -24,8 +24,16 @@ export default function KelulusanPage() {
 
   const verifiedStudents = students.filter((s: any) => s.pendaftaran_status === 'terverifikasi' || s.pendaftaran_status === 'lulus' || s.pendaftaran_status === 'belum_lengkap');
 
-  const handleSetGraduation = async (studentId: string, status: string) => {
-    await apiUpdateStudent(studentId, { pendaftaran_status: status });
+  const handleSetGraduation = async (student: any, status: string) => {
+    await apiUpdateStudent(student.id, { pendaftaran_status: status });
+    const quotas = await apiGetQuotas();
+    const target = quotas.find((q: any) => q.program === student.gelombang);
+    if (target) {
+      const wasLulus = student.pendaftaran_status === 'lulus';
+      const nowLulus = status === 'lulus';
+      if (!wasLulus && nowLulus) await apiUpdateQuotaCount(target.id, 1);
+      else if (wasLulus && !nowLulus) await apiUpdateQuotaCount(target.id, -1);
+    }
     loadStudents();
     setToast({ message: `Status siswa diperbarui`, type: 'success' });
   };
@@ -59,10 +67,10 @@ export default function KelulusanPage() {
                 <td><StatusBadge status={s.pendaftaran_status} /></td>
                 <td>
                   <div className="flex gap-2">
-                    <button onClick={() => handleSetGraduation(s.id, 'lulus')} className="btn btn-success btn-sm" disabled={s.pendaftaran_status === 'lulus'}>
+                    <button onClick={() => handleSetGraduation(s, 'lulus')} className="btn btn-success btn-sm" disabled={s.pendaftaran_status === 'lulus'}>
                       Lulus
                     </button>
-                    <button onClick={() => handleSetGraduation(s.id, 'belum_lengkap')} className="btn btn-danger btn-sm" disabled={s.pendaftaran_status === 'belum_lengkap'}>
+                    <button onClick={() => handleSetGraduation(s, 'belum_lengkap')} className="btn btn-danger btn-sm" disabled={s.pendaftaran_status === 'belum_lengkap'}>
                       Tidak Lulus
                     </button>
                   </div>

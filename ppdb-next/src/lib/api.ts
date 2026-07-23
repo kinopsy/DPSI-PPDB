@@ -19,7 +19,7 @@ export async function apiGetStudents(): Promise<any[]> {
 }
 
 export async function apiCreateStudent(data: any) {
-  const ref = await addDoc(collection(db, 'students'), { ...data, createdAt: serverTimestamp() });
+  const ref = await addDoc(collection(db, 'students'), { ...data, pendaftaran_status: 'menunggu_verifikasi', createdAt: serverTimestamp() });
   const snap = await getDoc(ref);
   return { success: true, id: ref.id, ...snap.data() };
 }
@@ -153,6 +153,16 @@ export async function apiUpdateQuota(id: string, data: any) {
 
 export async function apiDeleteQuota(id: string) {
   await deleteDoc(doc(db, 'quotas', id));
+  return { success: true };
+}
+
+export async function apiUpdateQuotaCount(quotaId: string, delta: number) {
+  const ref = doc(db, 'quotas', quotaId);
+  const snap = await getDoc(ref);
+  if (snap.exists()) {
+    const current = snap.data().current_count || 0;
+    await updateDoc(ref, { current_count: Math.max(0, current + delta) });
+  }
   return { success: true };
 }
 

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { apiGetStudents, apiCreateStudent, apiUpdateStudent } from '@/lib/api';
+import { apiGetStudents, apiCreateStudent, apiUpdateStudent, apiGetQuotas } from '@/lib/api';
 import { Toast } from '@/components/UI';
 
 export default function BiodataPage() {
@@ -11,6 +11,7 @@ export default function BiodataPage() {
   const router = useRouter();
   const [toast, setToast] = useState<{ message: string; type: string } | null>(null);
   const [student, setStudent] = useState<any>(undefined);
+  const [quotas, setQuotas] = useState<any[]>([]);
   const [form, setForm] = useState({
     nisn: '',
     name: '',
@@ -22,10 +23,12 @@ export default function BiodataPage() {
     alamat: '',
     telepon: '',
     asal_sekolah: '',
+    gelombang: '',
   });
 
   useEffect(() => {
     if (!user) { router.push('/auth/login'); return; }
+    apiGetQuotas().then(setQuotas);
     apiGetStudents().then(students => {
       const s = students.find((st: any) => st.user_id === user.id);
       setStudent(s);
@@ -41,6 +44,7 @@ export default function BiodataPage() {
           alamat: s.alamat || '',
           telepon: s.telepon || '',
           asal_sekolah: s.asal_sekolah || '',
+          gelombang: s.gelombang || '',
         });
       } else {
         setForm(prev => ({ ...prev, name: user.name }));
@@ -126,6 +130,13 @@ export default function BiodataPage() {
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Asal Sekolah</label>
             <input name="asal_sekolah" className="input" value={form.asal_sekolah} onChange={handleChange} required />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Gelombang</label>
+            <select name="gelombang" className="input" value={form.gelombang} onChange={handleChange} required>
+              <option value="">Pilih gelombang</option>
+              {quotas.map(q => <option key={q.id} value={q.program}>{q.program}</option>)}
+            </select>
           </div>
           <button type="submit" className="btn btn-primary">Simpan Biodata</button>
         </form>
