@@ -10,7 +10,6 @@ import { StatusBadge, Toast } from '@/components/UI';
 const DOC_TYPES = [
   { value: 'kk', label: 'Kartu Keluarga' },
   { value: 'akta', label: 'Akta Kelahiran' },
-  { value: 'skhun', label: 'SKHUN' },
   { value: 'skl', label: 'SKL' },
 ];
 
