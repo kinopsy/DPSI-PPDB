@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { apiGetStudents, apiGetPayments, apiCreatePayment } from '@/lib/api';
+import { uploadToCloudinary } from '@/lib/cloudinary';
 import { StatusBadge, Toast } from '@/components/UI';
 
 export default function PembayaranPage() {
@@ -28,10 +29,16 @@ export default function PembayaranPage() {
 
   const handleUpload = async (file: File) => {
     if (!studentId) { setToast({ message: 'Lengkapi biodata terlebih dahulu', type: 'error' }); return; }
-    await apiCreatePayment(studentId, file.name);
-    const payments = await apiGetPayments();
-    setPayment(payments.find((p: any) => p.student_id === studentId));
-    setToast({ message: 'Bukti pembayaran berhasil diupload', type: 'success' });
+    try {
+      setToast({ message: 'Mengupload...', type: 'info' });
+      const url = await uploadToCloudinary(file);
+      await apiCreatePayment(studentId, url);
+      const payments = await apiGetPayments();
+      setPayment(payments.find((p: any) => p.student_id === studentId));
+      setToast({ message: 'Bukti pembayaran berhasil diupload', type: 'success' });
+    } catch {
+      setToast({ message: 'Gagal upload. Coba lagi.', type: 'error' });
+    }
   };
 
   return (
@@ -40,15 +47,19 @@ export default function PembayaranPage() {
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       <div className="card p-6">
         <div className="mb-4 p-4 bg-blue-50 rounded-lg">
-          <p className="text-sm text-blue-800">Biaya pendaftaran: <strong>Rp 250.000</strong></p>
+          <p className="text-sm text-blue-800">Biaya pendaftaran: <strong>Rp {payment?.amount?.toLocaleString('id-ID') || '250.000'}</strong></p>
           <p className="text-sm text-blue-600 mt-1">Transfer ke: BCA 1234567890 a.n SD Muhammadiyah Karangkajen</p>
         </div>
 
         {payment && (
-          <div className="flex items-center gap-3 mb-4 p-4 bg-slate-50 rounded-lg">
-            <span className="text-sm text-slate-600">Status:</span>
-            <StatusBadge status={payment.payment_status} />
-            {payment.proof_file_path && <span className="text-sm text-slate-500">{payment.proof_file_path}</span>}
+          <div className="mb-4 p-4 bg-slate-50 rounded-lg">
+            <div className="flex items-center gap-3 mb-2">
+              <span className="text-sm text-slate-600">Status:</span>
+              <StatusBadge status={payment.payment_status} />
+            </div>
+            {payment.proof_file_path && (
+              <img src={payment.proof_file_path} alt="Bukti Bayar" className="w-full max-w-xs rounded-lg border border-slate-200 mt-2" />
+            )}
           </div>
         )}
 

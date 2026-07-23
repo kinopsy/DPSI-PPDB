@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { apiGetAuditLogs } from '@/lib/api';
+import { apiGetAuditLogs, formatCurrency } from '@/lib/api';
 
 export default function AuditLogPage() {
   const { user } = useAuth();
@@ -27,7 +27,7 @@ export default function AuditLogPage() {
   if (!user) return null;
 
   const totalNominal = logs.reduce((sum, log) => {
-    const num = parseInt(log.amount.replace(/[^0-9]/g, ''), 10);
+    const num = typeof log.amount === 'number' ? log.amount : parseInt(String(log.amount).replace(/[^0-9]/g, ''), 10);
     return sum + (isNaN(num) ? 0 : num);
   }, 0);
 
@@ -74,9 +74,9 @@ export default function AuditLogPage() {
                 <td>{i + 1}</td>
                 <td className="font-medium">{log.action}</td>
                 <td>{log.student}</td>
-                <td className="font-medium">{log.amount}</td>
-                <td className="text-sm text-slate-500">{log.date}</td>
-                <td>{log.officer}</td>
+                <td className="font-medium">{typeof log.amount === 'number' ? formatCurrency(log.amount) : log.amount}</td>
+                <td className="text-sm text-slate-500">{log.date ? new Date(log.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}</td>
+                <td>{log.officer || '-'}</td>
               </tr>
             ))}
           </tbody>
@@ -84,7 +84,7 @@ export default function AuditLogPage() {
             <tfoot>
               <tr className="font-bold text-slate-800">
                 <td colSpan={3} className="text-right">Total</td>
-                <td>Rp {totalNominal.toLocaleString('id-ID')}</td>
+                <td>{formatCurrency(totalNominal)}</td>
                 <td colSpan={2}></td>
               </tr>
             </tfoot>

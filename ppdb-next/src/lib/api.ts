@@ -91,13 +91,19 @@ export async function apiGetPayments(): Promise<any[]> {
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
-export async function apiCreatePayment(studentId: string, proofPath: string) {
+export async function apiCreatePayment(studentId: string, proofPath: string, amount?: number) {
   const q = query(collection(db, 'payments'), where('student_id', '==', studentId));
   const existing = await getDocs(q);
 
+  if (!amount) {
+    const tariffSnap = await getDocs(collection(db, 'tariffs'));
+    const firstTariff = tariffSnap.docs[0]?.data();
+    amount = firstTariff?.amount || 250000;
+  }
+
   if (!existing.empty) {
     const ref = existing.docs[0].ref;
-    await updateDoc(ref, { proof_file_path: proofPath, payment_status: 'pending', verified_at: null });
+    await updateDoc(ref, { proof_file_path: proofPath, amount, payment_status: 'pending', verified_at: null, verified_by: null });
     const snap = await getDoc(ref);
     return { success: true, id: ref.id, ...snap.data() };
   }
@@ -105,33 +111,43 @@ export async function apiCreatePayment(studentId: string, proofPath: string) {
   const ref = await addDoc(collection(db, 'payments'), {
     student_id: studentId,
     proof_file_path: proofPath,
+    amount,
     payment_status: 'pending',
     verified_at: null,
+    verified_by: null,
     createdAt: serverTimestamp(),
   });
   const snap = await getDoc(ref);
   return { success: true, id: ref.id, ...snap.data() };
 }
 
-export async function apiVerifyPayment(paymentId: string, status: string, officer?: string) {
+export async function apiVerifyPayment(paymentId: string, status: string, officer?: string, note?: string) {
   const ref = doc(db, 'payments', paymentId);
-  const updates: any = { payment_status: status };
+  const updates: any = { payment_status: status, verified_by: officer || null };
 
-  if (status === 'lunas' || status === 'ditolak') {
+  if (status === 'lunas' || status === 'ditolak_bayar') {
     updates.verified_at = new Date().toISOString();
   }
 
   await updateDoc(ref, updates);
 
-  if (status === 'lunas' || status === 'ditolak') {
+  if (status === 'lunas' || status === 'ditolak_bayar') {
     const snap = await getDoc(ref);
     const data = snap.data()!;
+
+    let studentName = data.student_id;
+    const studentSnap = await getDoc(doc(db, 'students', data.student_id));
+    if (studentSnap.exists()) {
+      studentName = studentSnap.data().name || studentName;
+    }
+
     await addDoc(collection(db, 'auditLogs'), {
       action: status === 'lunas' ? 'Pembayaran Diverifikasi' : 'Pembayaran Ditolak',
-      student: data.student_id,
-      amount: data.proof_file_path || '',
+      student: studentName,
+      amount: data.amount || 0,
       date: new Date().toISOString(),
       officer: officer || '',
+      note: note || null,
       createdAt: serverTimestamp(),
     });
   }
