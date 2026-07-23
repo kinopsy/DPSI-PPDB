@@ -21,7 +21,7 @@ export default function PanitiaDashboard() {
         ...prev,
         total: students.length,
         verified: students.filter((s: any) => s.pendaftaran_status === 'terverifikasi').length,
-        pending: students.filter((s: any) => s.pendaftaran_status === 'menunggu_verifikasi').length,
+        pending: students.filter((s: any) => !s.pendaftaran_status || s.pendaftaran_status === 'menunggu_verifikasi').length,
         passed: students.filter((s: any) => s.pendaftaran_status === 'lulus').length,
       }));
     });

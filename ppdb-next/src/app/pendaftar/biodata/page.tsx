@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { apiGetStudents, apiCreateStudent, apiUpdateStudent, apiGetQuotas } from '@/lib/api';
+import { apiGetStudents, apiCreateStudent, apiUpdateStudent, apiGetQuotas, apiUpdateQuotaCount } from '@/lib/api';
 import { Toast } from '@/components/UI';
 
 export default function BiodataPage() {
@@ -64,7 +64,15 @@ export default function BiodataPage() {
     if (form.nik.length !== 16) { setToast({ message: 'NIK harus 16 digit', type: 'error' }); return; }
 
     if (student) {
+      const oldGelombang = student.gelombang;
       await apiUpdateStudent(student.id, form);
+      if (form.gelombang && form.gelombang !== oldGelombang) {
+        const quotas = await apiGetQuotas();
+        const oldQ = quotas.find((q: any) => q.program === oldGelombang);
+        const newQ = quotas.find((q: any) => q.program === form.gelombang);
+        if (oldQ) await apiUpdateQuotaCount(oldQ.id, -1);
+        if (newQ) await apiUpdateQuotaCount(newQ.id, 1);
+      }
     } else {
       await apiCreateStudent({ user_id: user.id, ...form });
     }

@@ -20,6 +20,15 @@ export async function apiGetStudents(): Promise<any[]> {
 
 export async function apiCreateStudent(data: any) {
   const ref = await addDoc(collection(db, 'students'), { ...data, pendaftaran_status: 'menunggu_verifikasi', createdAt: serverTimestamp() });
+  if (data.gelombang) {
+    const q = query(collection(db, 'quotas'), where('program', '==', data.gelombang));
+    const quotaSnap = await getDocs(q);
+    if (!quotaSnap.empty) {
+      const quotaRef = quotaSnap.docs[0].ref;
+      const current = quotaSnap.docs[0].data().current_count || 0;
+      await updateDoc(quotaRef, { current_count: current + 1 });
+    }
+  }
   const snap = await getDoc(ref);
   return { success: true, id: ref.id, ...snap.data() };
 }
