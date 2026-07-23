@@ -17,27 +17,16 @@ export default function PanitiaDashboard() {
 
     const unsubStudents = onSnapshot(collection(db, 'students'), snap => {
       const students = snap.docs.map(d => d.data());
-      setStats(prev => ({
-        ...prev,
-        total: students.length,
-        passed: students.filter((s: any) => s.pendaftaran_status === 'lulus').length,
-      }));
+      const total = students.length;
+      const verified = students.filter((s: any) => s.pendaftaran_status === 'terverifikasi').length;
+      const pending = students.filter((s: any) => !s.pendaftaran_status || s.pendaftaran_status === 'menunggu_verifikasi' || s.pendaftaran_status === 'belum_lengkap').length;
+      const passed = students.filter((s: any) => s.pendaftaran_status === 'lulus').length;
+      setStats(prev => ({ ...prev, total, verified, pending, passed }));
     });
 
     const unsubDocs = onSnapshot(collection(db, 'documents'), snap => {
-      const docs = snap.docs.map(d => d.data());
-      const byStudent: Record<string, string[]> = {};
-      docs.forEach((d: any) => {
-        if (!byStudent[d.student_id]) byStudent[d.student_id] = [];
-        byStudent[d.student_id].push(d.verification_status);
-      });
-      let verified = 0, pending = 0, pendingStudents = 0;
-      Object.values(byStudent).forEach((statuses: string[]) => {
-        if (statuses.every(s => s === 'disetujui')) verified++;
-        else if (statuses.some(s => s === 'menunggu')) { pending++; pendingStudents++; }
-        else pending++;
-      });
-      setStats(prev => ({ ...prev, verified, pending, pendingStudents }));
+      const studentIds = new Set(snap.docs.filter(d => d.data().verification_status === 'menunggu').map(d => d.data().student_id));
+      setStats(prev => ({ ...prev, pendingStudents: studentIds.size }));
     });
 
     return () => { unsubStudents(); unsubDocs(); };
