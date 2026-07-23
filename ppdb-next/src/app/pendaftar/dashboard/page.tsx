@@ -3,7 +3,8 @@
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { apiGetStudents, apiGetDocuments, apiGetPayments } from '@/lib/api';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { StatusBadge } from '@/components/UI';
 import Link from 'next/link';
 
@@ -14,20 +15,34 @@ export default function PendaftarDashboard() {
   const [docs, setDocs] = useState<any[]>([]);
   const [payment, setPayment] = useState<any>(null);
 
+  const [studentId, setStudentId] = useState<string | null>(null);
+
   useEffect(() => {
     if (!user) { router.push('/auth/login'); return; }
-    (async () => {
-      const students = await apiGetStudents();
-      const s = students.find((st: any) => st.user_id === user.id);
-      setStudent(s || null);
-      if (s) {
-        const allDocs = await apiGetDocuments();
-        setDocs(allDocs.filter((d: any) => d.student_id === s.id));
-        const allPayments = await apiGetPayments();
-        setPayment(allPayments.find((p: any) => p.student_id === s.id) || null);
+    const unsub = onSnapshot(query(collection(db, 'students'), where('user_id', '==', user.id)), snap => {
+      const doc = snap.docs[0];
+      if (doc) {
+        setStudent({ id: doc.id, ...doc.data() });
+        setStudentId(doc.id);
+      } else {
+        setStudent(null);
+        setStudentId(null);
       }
-    })();
+    });
+    return () => unsub();
   }, [user, router]);
+
+  useEffect(() => {
+    if (!studentId) { setDocs([]); setPayment(null); return; }
+    const unsubDocs = onSnapshot(collection(db, 'documents'), snap => {
+      setDocs(snap.docs.filter(d => d.data().student_id === studentId).map(d => ({ id: d.id, ...d.data() })));
+    });
+    const unsubPayments = onSnapshot(collection(db, 'payments'), snap => {
+      const p = snap.docs.find(d => d.data().student_id === studentId);
+      setPayment(p ? { id: p.id, ...p.data() } : null);
+    });
+    return () => { unsubDocs(); unsubPayments(); };
+  }, [studentId]);
 
   if (!user) return null;
 

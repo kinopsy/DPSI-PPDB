@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { apiGetStudents, apiGetPayments, apiGetQuotas, apiGetTariffs, formatCurrency } from '@/lib/api';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { formatCurrency } from '@/lib/api';
 
 export default function KepsekDashboard() {
   const { user } = useAuth();
@@ -15,12 +17,21 @@ export default function KepsekDashboard() {
 
   useEffect(() => {
     if (!user || user.role !== 'kepsek') { router.push('/auth/login'); return; }
-    (async () => {
-      setStudents(await apiGetStudents());
-      setPayments(await apiGetPayments());
-      setQuotas(await apiGetQuotas());
-      setTariffs(await apiGetTariffs());
-    })();
+
+    const unsubStudents = onSnapshot(collection(db, 'students'), snap => {
+      setStudents(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+    const unsubPayments = onSnapshot(collection(db, 'payments'), snap => {
+      setPayments(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+    const unsubQuotas = onSnapshot(collection(db, 'quotas'), snap => {
+      setQuotas(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+    const unsubTariffs = onSnapshot(collection(db, 'tariffs'), snap => {
+      setTariffs(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+
+    return () => { unsubStudents(); unsubPayments(); unsubQuotas(); unsubTariffs(); };
   }, [user, router]);
 
   if (!user) return null;

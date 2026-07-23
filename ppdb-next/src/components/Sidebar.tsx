@@ -13,6 +13,7 @@ const NAV_ITEMS: Record<string, { label: string; href: string; icon: string }[]>
     { label: 'Status', href: '/pendaftar/status', icon: '📊' },
   ],
   panitia: [
+    { label: 'Dashboard', href: '/panitia/dashboard', icon: '🏠' },
     { label: 'Verifikasi Berkas', href: '/panitia/verifikasi-berkas', icon: '✅' },
     { label: 'Kuota Dinamis', href: '/panitia/kuota-dinamis', icon: '📋' },
     { label: 'Kelulusan', href: '/panitia/kelulusan', icon: '🎓' },

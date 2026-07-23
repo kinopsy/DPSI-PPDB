@@ -135,10 +135,25 @@ export async function apiGetQuotas(): Promise<any[]> {
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
+export async function apiCreateQuota(data: { program: string; max_quota: number; deadline: string }) {
+  const ref = await addDoc(collection(db, 'quotas'), {
+    ...data,
+    current_count: 0,
+    createdAt: serverTimestamp(),
+  });
+  const snap = await getDoc(ref);
+  return { success: true, id: ref.id, ...snap.data() };
+}
+
 export async function apiUpdateQuota(id: string, data: any) {
   await updateDoc(doc(db, 'quotas', id), data);
   const snap = await getDoc(doc(db, 'quotas', id));
   return { success: true, id, ...snap.data() };
+}
+
+export async function apiDeleteQuota(id: string) {
+  await deleteDoc(doc(db, 'quotas', id));
+  return { success: true };
 }
 
 export async function apiGetTariffs(): Promise<any[]> {

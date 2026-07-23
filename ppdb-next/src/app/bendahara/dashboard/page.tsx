@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { apiGetPayments, apiGetTariffs, formatCurrency } from '@/lib/api';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { formatCurrency } from '@/lib/api';
 import Link from 'next/link';
 
 export default function BendaharaDashboard() {
@@ -14,10 +16,15 @@ export default function BendaharaDashboard() {
 
   useEffect(() => {
     if (!user || user.role !== 'bendahara') { router.push('/auth/login'); return; }
-    (async () => {
-      setPayments(await apiGetPayments());
-      setTariffs(await apiGetTariffs());
-    })();
+
+    const unsubPayments = onSnapshot(collection(db, 'payments'), snap => {
+      setPayments(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+    const unsubTariffs = onSnapshot(collection(db, 'tariffs'), snap => {
+      setTariffs(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+
+    return () => { unsubPayments(); unsubTariffs(); };
   }, [user, router]);
 
   if (!user) return null;
