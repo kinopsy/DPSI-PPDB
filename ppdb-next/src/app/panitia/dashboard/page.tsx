@@ -10,23 +10,30 @@ import Link from 'next/link';
 export default function PanitiaDashboard() {
   const { user } = useAuth();
   const router = useRouter();
-  const [stats, setStats] = useState({ total: 0, verified: 0, pending: 0, passed: 0, pendingStudents: 0 });
+  const [stats, setStats] = useState({ total: 0, verified: 0, pending: 0, passed: 0 });
 
   useEffect(() => {
     if (!user || user.role !== 'panitia') { router.push('/auth/login'); return; }
 
     const unsubStudents = onSnapshot(collection(db, 'students'), snap => {
       const students = snap.docs.map(d => d.data());
-      const total = students.length;
-      const verified = students.filter((s: any) => s.pendaftaran_status === 'terverifikasi').length;
-      const pending = students.filter((s: any) => !s.pendaftaran_status || s.pendaftaran_status === 'menunggu_verifikasi' || s.pendaftaran_status === 'belum_lengkap').length;
-      const passed = students.filter((s: any) => s.pendaftaran_status === 'lulus').length;
-      setStats(prev => ({ ...prev, total, verified, pending, passed }));
+      setStats(prev => ({
+        ...prev,
+        total: students.length,
+        verified: students.filter((s: any) => s.pendaftaran_status === 'terverifikasi').length,
+        passed: students.filter((s: any) => s.pendaftaran_status === 'lulus').length,
+      }));
     });
 
     const unsubDocs = onSnapshot(collection(db, 'documents'), snap => {
-      const studentIds = new Set(snap.docs.filter(d => d.data().verification_status === 'menunggu').map(d => d.data().student_id));
-      setStats(prev => ({ ...prev, pendingStudents: studentIds.size }));
+      const byStudent: Record<string, string[]> = {};
+      snap.docs.forEach(d => {
+        const data = d.data();
+        if (!byStudent[data.student_id]) byStudent[data.student_id] = [];
+        byStudent[data.student_id].push(data.verification_status);
+      });
+      const pending = Object.values(byStudent).filter(statuses => statuses.some(s => s === 'menunggu')).length;
+      setStats(prev => ({ ...prev, pending }));
     });
 
     return () => { unsubStudents(); unsubDocs(); };
@@ -62,7 +69,7 @@ export default function PanitiaDashboard() {
       <h3 className="text-sm font-semibold text-slate-800 uppercase tracking-wider mb-4">Aksi Cepat</h3>
       <div className="grid md:grid-cols-2 gap-4">
         {[
-          { href: '/panitia/verifikasi-berkas', icon: '✅', title: 'Verifikasi Berkas', desc: `${stats.pendingStudents} antrean`, color: 'bg-blue-50' },
+          { href: '/panitia/verifikasi-berkas', icon: '✅', title: 'Verifikasi Berkas', desc: `${stats.pending} menunggu`, color: 'bg-blue-50' },
           { href: '/panitia/kelulusan', icon: '🎓', title: 'Kelulusan', desc: 'Tentukan kelulusan', color: 'bg-blue-50' },
           { href: '/panitia/kuota-dinamis', icon: '📋', title: 'Kuota Dinamis', desc: 'Atur kuota', color: 'bg-violet-50' },
           { href: '/panitia/pengumuman', icon: '✍️', title: 'Buat Pengumuman', desc: 'Kelola pengumuman', color: 'bg-amber-50' },
