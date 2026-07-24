@@ -10,7 +10,6 @@
 
 **Last Updated:** 2026-07-24
 
-**Source:** Derived from SoT-4 (User Flows) dan implementasi aktual (`ppdb-next/src/app/`, `ppdb-next/src/components/`)
 
 ---
 

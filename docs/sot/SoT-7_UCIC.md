@@ -10,7 +10,7 @@
 
 **Last Updated:** 2026-07-24
 
-**Source:** Derived dari SoT-4 (User Flows), SoT-5 (Prototype), SoT-6 (Data Model)
+
 
 ---
 

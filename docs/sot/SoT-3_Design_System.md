@@ -10,7 +10,7 @@
 
 **Last Updated:** 2026-07-24
 
-**Source:** Derived from SoT-2 (IA) and validasi source code (`ppdb-next/src/`, Tailwind CSS 4)
+
 
 ---
 

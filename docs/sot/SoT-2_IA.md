@@ -10,7 +10,7 @@
 
 **Last Updated:** 2026-07-24
 
-**Source:** Derived from SoT-1 (SRS) and validasi source code (`ppdb-next/src/components/`, `ppdb-next/src/app/`)
+
 
 ---
 

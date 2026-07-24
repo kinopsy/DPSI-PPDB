@@ -10,7 +10,6 @@
 
 **Last Updated:** 2026-07-24
 
-**Source:** Derived from Analisis Kebutuhan (`docs/AK/analisis_kebutuhan.md`), Wawancara (`docs/observasi/detail_wawancara.md`), and validasi source code (`ppdb-next/src/`)
 
 ---
 

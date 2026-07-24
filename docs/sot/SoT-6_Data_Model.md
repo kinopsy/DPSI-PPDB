@@ -10,7 +10,6 @@
 
 **Last Updated:** 2026-07-24
 
-**Source:** Derived from SoT-4 (User Flows) dan validasi source code (`ppdb-next/src/lib/types.ts`, `api.ts`, `firebase.ts`)
 
 ---
 
