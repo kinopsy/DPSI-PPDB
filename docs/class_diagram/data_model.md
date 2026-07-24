@@ -1,6 +1,6 @@
 # Data Model
 
-**Document Version:** v1.0
+**Document Version:** v2.0
 
 **Project:** SIPDB — Sistem Informasi Penerimaan Peserta Didik Baru
 
@@ -8,15 +8,15 @@
 
 **Status:** Active
 
-**Last Updated:** 2026-07-23
+**Last Updated:** 2026-07-24
 
-**Source:** Derived from source code (`ppdb-next/src/lib/types.ts`, `api.ts`, `firebase.ts`, `mock-data.js`)
+**Source:** Derived from source code (`ppdb-next/src/lib/types.ts`, `api.ts`, `firebase.ts`)
 
 ---
 
 ## 1. Overview
 
-Dokumen ini mendefinisikan model data untuk sistem SIPDB (Sistem Informasi Penerimaan Peserta Didik Baru) di SDN Karangkajen. Model diturunkan langsung dari kode sumber aplikasi yang menggunakan **Firebase Firestore** sebagai database NoSQL cloud.
+Dokumen ini mendefinisikan model data untuk sistem SIPDB (Sistem Informasi Penerimaan Peserta Didik Baru) di SD Muhammadiyah Karangkajen. Model diturunkan langsung dari kode sumber aplikasi yang menggunakan **Firebase Firestore** sebagai database NoSQL cloud.
 
 Sistem mengelola 8 collection Firestore yang mencakup autentikasi pengguna, biodata siswa, berkas pendaftaran, pembayaran, kuota, tarif, pengumuman, dan audit log.
 
@@ -36,7 +36,6 @@ classDiagram
         +string id PK
         +string name
         +string email
-        +string password
         +string role
         +timestamp createdAt
     }
@@ -146,13 +145,13 @@ Collection data siswa calon pendaftar. Setiap siswa terhubung ke satu user (oran
 |---|---|---|---|
 | id | string | PK (auto-generated) | Pengenal unik — Firestore document ID |
 | user_id | string \| null | FK → users.id | Orang tua yang mendaftarkan. Null jika pendaftaran manual oleh panitia |
-| nisn | string | required | Nomor Induk Siswa Nasional |
+| nisn | string | required, 10 digit | Nomor Induk Siswa Nasional |
 | name | string | required | Nama lengkap calon siswa |
-| nik | string | required | Nomor Induk Kependudukan |
+| nik | string | required, 16 digit | Nomor Induk Kependudukan |
 | tempat_lahir | string | required | Tempat lahir |
 | tanggal_lahir | string | required | Tanggal lahir (YYYY-MM-DD) |
 | jenis_kelamin | string | required | `Laki-laki` atau `Perempuan` |
-| agama | string | required | Agama |
+| agama | string | required | Islam, Kristen, Katolik, Hindu, Buddha, Konghucu |
 | alamat | string | required | Alamat lengkap |
 | telepon | string | required | Nomor telepon/handphone |
 | asal_sekolah | string | required | Asal sekolah dasar |
@@ -163,7 +162,7 @@ Collection data siswa calon pendaftar. Setiap siswa terhubung ke satu user (oran
 - `menunggu_verifikasi` — Default saat siswa terdaftar
 - `terverifikasi` — Semua berkas disetujui panitia
 - `belum_lengkap` — Ada berkas ditolak, perlu upload ulang
-- `lulus` — Dinyatakan lulus oleh kepala sekolah
+- `lulus` — Dinyatakan lulus oleh panitia
 
 ### 3.3 documents
 
@@ -173,7 +172,7 @@ Collection berkas persyaratan pendaftaran. Menggunakan pola upsert — jika doku
 |---|---|---|---|
 | id | string | PK (auto-generated) | Pengenal unik — Firestore document ID |
 | student_id | string | FK → students.id | Siswa yang memiliki berkas |
-| file_type | string | required | Jenis berkas: `kk`, `akta`, `skl`, `foto`, dll. |
+| file_type | string | required | Jenis berkas: `kk`, `akta`, `skhun`, `skl` |
 | file_path | string | required | Path/URL file di Cloudinary |
 | verification_status | string | required, default: `menunggu` | Status verifikasi |
 | rejection_note | string \| null | — | Catatan penolakan (diisi jika `ditolak`) |
@@ -190,7 +189,7 @@ Collection berkas persyaratan pendaftaran. Menggunakan pola upsert — jika doku
 
 ### 3.4 payments
 
-Collection pembayaran administrasi PPDB. Setiap siswa hanya memiliki satu catatan pembayaran (upsert).
+Collection pembayaran administrasi PPDB. Setiap siswa hanya memiliki satu catatan pembayaran (upsert). Biaya: **Rp 250.000** (BCA 1234567890).
 
 | Field | Tipe | Constraint | Deskripsi |
 |---|---|---|---|
@@ -213,10 +212,15 @@ Collection kuota pendaftaran per program studi.
 | Field | Tipe | Constraint | Deskripsi |
 |---|---|---|---|
 | id | string | PK (auto-generated) | Pengenal unik — Firestore document ID |
-| program | string | required | Nama program: `IPA`, `IPS`, `Bahasa` |
+| program | string | required | Nama program: `Kelas Reguler`, `Kelas Tahfidz`, `Kelas Bilingual` |
 | max_quota | number | required | Kuota maksimal penerimaan |
 | current_count | number | required | Jumlah siswa yang sudah diterima |
 | deadline | string | required | Batas waktu pendaftaran (YYYY-MM-DD) |
+
+**Program Defaults:**
+- Kelas Reguler (A): 120 siswa — Kurikulum nasional dengan pendekatan modern
+- Kelas Tahfidz (B): 80 siswa — Integrasi kurikulum nasional dengan tahfidz Qur'an
+- Kelas Bilingual (C): 40 siswa — Pembelajaran metode bilingual Indonesia-Inggris
 
 ### 3.6 tariffs
 
@@ -269,7 +273,7 @@ Collection jejak audit aktivitas. Dicatat otomatis saat verifikasi pembayaran at
 | Relasi | Field Reference | Cardinality | Deskripsi |
 |---|---|---|---|
 | users → students | `students.user_id` → `users.id` | 1:N | Satu pengguna (pendaftar) dapat mendaftarkan banyak siswa |
-| students → documents | `documents.student_id` → `students.id` | 1:N | Satu siswa memiliki banyak berkas (KK, Akta, dll.) |
+| students → documents | `documents.student_id` → `students.id` | 1:N | Satu siswa memiliki banyak berkas (KK, Akta, SKHUN, SKL) |
 | students → payments | `payments.student_id` → `students.id` | 1:1 | Satu siswa memiliki satu catatan pembayaran (upsert) |
 | students → auditLogs | `auditLogs.student` (referensi nama) | 1:N | Satu siswa dapat memiliki banyak entri audit |
 
@@ -280,47 +284,44 @@ Collection jejak audit aktivitas. Dicatat otomatis saat verifikasi pembayaran at
 ## 5. Business Rules
 
 ### 5.1 Aturan Pengguna
-
 - Email harus unik di seluruh sistem (dijamin oleh Firebase Auth).
 - Saat register, role default adalah `pendaftar`.
 - Panitia, bendahara, dan kepsek dibuat oleh admin (bukan pendaftaran publik).
 - Password dikelola oleh Firebase Authentication (min. 6 karakter).
 
 ### 5.2 Aturan Siswa
-
 - `user_id` bisa null jika pendaftaran dilakukan secara manual oleh panitia.
 - `pendaftaran_status` berubah secara otomatis berdasarkan status verifikasi berkas.
+- NISN harus tepat 10 digit, NIK harus tepat 16 digit.
 - Alur status: `menunggu_verifikasi` → `terverifikasi` atau `belum_lengkap` → `lulus`.
 
 ### 5.3 Aturan Berkas
-
+- Jenis berkas: `kk`, `akta`, `skhun`, `skl` (4 jenis).
 - Menggunakan pola upsert: jika `student_id` + `file_type` sudah ada, berkas diperbarui.
 - File disimpan di Cloudinary, path/URL disimpan di Firestore.
 - `verification_status` berubah: `menunggu` → `disetujui`/`ditolak`.
 - Jika semua berkas `disetujui` → siswa otomatis `terverifikasi`.
 - Jika ada berkas `ditolak` → siswa otomatis `belum_lengkap`.
+- File max 2MB, format: PDF/JPG/PNG.
 
 ### 5.4 Aturan Pembayaran
-
+- Biaya pendaftaran: Rp 250.000 (transfer ke BCA 1234567890).
 - Menggunakan pola upsert: satu siswa hanya memiliki satu catatan pembayaran.
 - `payment_status` berubah: `pending` → `lunas`/`ditolak`.
 - Saat status `lunas` atau `ditolak`, `verified_at` diisi dengan timestamp.
 - Audit log otomatis dicatat saat pembayaran diverifikasi/ditolak.
 
 ### 5.5 Aturan Kuota
-
 - `max_quota` tidak boleh lebih rendah dari `current_count`.
 - Kuota dikurangi otomatis saat siswa dinyatakan lulus.
+- Program: Kelas Reguler (120), Kelas Tahfidz (80), Kelas Bilingual (40).
 
 ### 5.6 Aturan Tarif
-
 - Perubahan tarif otomatis tercatat di `auditLogs`.
 
 ---
 
 ## 6. Firestore Indexes
-
-Firestore secara otomatis membuat index untuk setiap field. Index komposit diperlukan untuk query gabungan:
 
 | Collection | Field(s) | Tujuan |
 |---|---|---|
@@ -340,32 +341,27 @@ Firestore secara otomatis membuat index untuk setiap field. Index komposit diper
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Users - hanya bisa dibaca sendiri, ditulis oleh admin
     match /users/{userId} {
       allow read: if request.auth != null && request.auth.uid == userId;
-      allow write: if false; // Dikelola oleh server/admin
+      allow write: if false;
     }
 
-    // Students - pendaftar lihat sendiri, panitia lihat semua
     match /students/{studentId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null;
-      allow update: if request.auth != null; // Panitia/bendahara/kepsek
+      allow update: if request.auth != null;
     }
 
-    // Documents - terkait student
     match /documents/{docId} {
       allow read: if request.auth != null;
       allow write: if request.auth != null;
     }
 
-    // Payments - terkait student
     match /payments/{paymentId} {
       allow read: if request.auth != null;
       allow write: if request.auth != null;
     }
 
-    // Quotas, Tariffs - public read, admin write
     match /quotas/{quotaId} {
       allow read: if true;
       allow write: if request.auth != null;
@@ -376,16 +372,14 @@ service cloud.firestore {
       allow write: if request.auth != null;
     }
 
-    // Announcements - public read, admin write
     match /announcements/{annId} {
       allow read: if true;
       allow write: if request.auth != null;
     }
 
-    // Audit Logs - admin only
     match /auditLogs/{logId} {
       allow read: if request.auth != null;
-      allow write: if false; // Ditulis otomatis oleh aplikasi
+      allow write: if false;
     }
   }
 }
@@ -397,11 +391,11 @@ service cloud.firestore {
 
 | Collection | Referensi Kebutuhan | Fitur |
 |---|---|---|
-| users | F-08, F-09, NF-01, NF-02, NF-03 | Registrasi akun, login, autentikasi Firebase Auth |
-| students | F-03, F-10, F-11, F-12 | Formulir biodata, status pendaftaran |
-| documents | F-11, F-19 | Upload berkas, verifikasi berkas oleh panitia |
-| payments | F-07, F-13, F-14, F-15, F-24 | Upload bukti, validasi pembayaran oleh bendahara |
-| quotas | F-06, F-27 | Kuota program, monitoring statistik |
-| tariffs | F-25, F-26 | Komponen biaya, laporan keuangan |
-| announcements | F-22, F-27 | Pengumuman resmi, informasi PPDB |
+| users | F-01, F-02, NF-01, NF-02, NF-03 | Registrasi akun, login, autentikasi Firebase Auth |
+| students | F-03, F-06, F-07 | Formulir biodata (NISN 10 digit, NIK 16 digit), status pendaftaran |
+| documents | F-04, F-08 | Upload berkas (kk, akta, skhun, skl), verifikasi berkas oleh panitia |
+| payments | F-05, F-13, F-15, F-16 | Upload bukti (Rp 250.000), validasi pembayaran oleh bendahara |
+| quotas | F-09, F-17 | Kuota program (Reguler/Tahfidz/Bilingual), monitoring statistik |
+| tariffs | F-14, F-15 | Komponen biaya, laporan keuangan |
+| announcements | F-11, F-18 | Pengumuman resmi, informasi PPDB |
 | auditLogs | NF-03 | Jejak audit verifikasi pembayaran dan perubahan tarif |
