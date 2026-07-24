@@ -53,7 +53,10 @@ export default function AuditLogPage() {
     return 0;
   };
 
-  const totalNominal = logs.reduce((sum, log) => sum + resolveAmount(log), 0);
+  const totalNominal = logs.reduce((sum, log) => {
+    if (log.action !== 'Pembayaran Diverifikasi') return sum;
+    return sum + resolveAmount(log);
+  }, 0);
 
   const getThumb = (path: string) => {
     if (!path) return null;
