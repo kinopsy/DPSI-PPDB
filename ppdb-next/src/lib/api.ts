@@ -91,19 +91,19 @@ export async function apiGetPayments(): Promise<any[]> {
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
-export async function apiCreatePayment(studentId: string, proofPath: string, amount?: number) {
+export async function apiCreatePayment(studentId: string, proofPath: string) {
   const q = query(collection(db, 'payments'), where('student_id', '==', studentId));
   const existing = await getDocs(q);
 
-  if (!amount) {
-    const tariffSnap = await getDocs(collection(db, 'tariffs'));
-    const firstTariff = tariffSnap.docs[0]?.data();
-    amount = firstTariff?.amount || 250000;
-  }
+  const tariffSnap = await getDocs(collection(db, 'tariffs'));
+  const pendaftaranTariff = tariffSnap.docs.find(d => d.data().component?.toLowerCase() === 'pendaftaran');
+  const tariff = pendaftaranTariff || tariffSnap.docs[0];
+  const amount = tariff?.data().amount || 250000;
+  const payment_for = 'Pendaftaran';
 
   if (!existing.empty) {
     const ref = existing.docs[0].ref;
-    await updateDoc(ref, { proof_file_path: proofPath, amount, payment_status: 'pending', verified_at: null, verified_by: null });
+    await updateDoc(ref, { proof_file_path: proofPath, amount, payment_for, payment_status: 'pending', verified_at: null, verified_by: null });
     const snap = await getDoc(ref);
     return { success: true, id: ref.id, ...snap.data() };
   }
@@ -112,6 +112,7 @@ export async function apiCreatePayment(studentId: string, proofPath: string, amo
     student_id: studentId,
     proof_file_path: proofPath,
     amount,
+    payment_for,
     payment_status: 'pending',
     verified_at: null,
     verified_by: null,
