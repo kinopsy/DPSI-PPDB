@@ -10,7 +10,9 @@ import { StatusBadge, Toast } from '@/components/UI';
 const DOC_TYPES = [
   { value: 'kk', label: 'Kartu Keluarga' },
   { value: 'akta', label: 'Akta Kelahiran' },
-  { value: 'skl', label: 'SKL' },
+  { value: 'pas_foto', label: 'Pas Foto' },
+  { value: 'ktp_orang_tua', label: 'KTP Orang Tua' },
+  { value: 'kip', label: 'KIP/KKS/PKH', optional: true },
 ];
 
 export default function DokumenPage() {
@@ -33,12 +35,12 @@ export default function DokumenPage() {
 
   if (!user) return null;
 
-  const handleUpload = async (fileType: string, file: File) => {
+  const handleUpload = async (fileType: string, file: File, isOptional = false) => {
     if (!studentId) { setToast({ message: 'Lengkapi biodata terlebih dahulu', type: 'error' }); return; }
     try {
       setToast({ message: 'Mengupload...', type: 'info' });
       const url = await uploadToCloudinary(file);
-      await apiUpsertDocument(studentId, fileType, url);
+      await apiUpsertDocument(studentId, fileType, url, isOptional);
       const documents = await apiGetDocuments();
       setDocs(documents.filter((d: any) => d.student_id === studentId));
       setToast({ message: `File ${fileType.toUpperCase()} berhasil diupload`, type: 'success' });
@@ -59,7 +61,12 @@ export default function DokumenPage() {
               <div key={dt.value} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
                 <div>
                   <div className="font-medium">{dt.label}</div>
-                  {doc && <div className="text-sm text-slate-500 mt-1">{doc.file_path}</div>}
+                  {dt.optional && <span className="text-xs text-blue-500 font-medium">Opsional</span>}
+                  {doc && doc.file_path && (
+                    <div className="mt-2">
+                      <img src={doc.file_path} alt={dt.label} className="w-20 h-16 rounded-lg object-cover border border-slate-200" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center gap-3">
                   {doc && <StatusBadge status={doc.verification_status} />}
@@ -73,7 +80,7 @@ export default function DokumenPage() {
                       const file = e.target.files?.[0];
                       if (file) {
                         if (file.size > 2 * 1024 * 1024) { setToast({ message: 'Ukuran file maks 2MB', type: 'error' }); return; }
-                        handleUpload(dt.value, file);
+                        handleUpload(dt.value, file, !!dt.optional);
                       }
                     }}
                   />

@@ -44,13 +44,13 @@ export async function apiGetDocuments(): Promise<any[]> {
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
-export async function apiUpsertDocument(studentId: string, fileType: string, filePath: string) {
+export async function apiUpsertDocument(studentId: string, fileType: string, filePath: string, isOptional = false) {
   const q = query(collection(db, 'documents'), where('student_id', '==', studentId), where('file_type', '==', fileType));
   const existing = await getDocs(q);
 
   if (!existing.empty) {
     const ref = existing.docs[0].ref;
-    await updateDoc(ref, { file_path: filePath, verification_status: 'menunggu', rejection_note: null });
+    await updateDoc(ref, { file_path: filePath, verification_status: 'menunggu', rejection_note: null, is_optional: isOptional });
     const snap = await getDoc(ref);
     return { success: true, id: ref.id, ...snap.data() };
   }
@@ -61,6 +61,7 @@ export async function apiUpsertDocument(studentId: string, fileType: string, fil
     file_path: filePath,
     verification_status: 'menunggu',
     rejection_note: null,
+    is_optional: isOptional,
     createdAt: serverTimestamp(),
   });
   const snap = await getDoc(ref);
@@ -76,8 +77,9 @@ export async function apiVerifyDocument(docId: string, status: string, note?: st
 
   const studentQ = query(collection(db, 'documents'), where('student_id', '==', data.student_id));
   const allDocs = await getDocs(studentQ);
-  const allVerified = allDocs.docs.every(d => d.data().verification_status === 'disetujui');
-  const anyRejected = allDocs.docs.some(d => d.data().verification_status === 'ditolak');
+  const requiredDocs = allDocs.docs.filter(d => !d.data().is_optional);
+  const allVerified = requiredDocs.length === 0 || requiredDocs.every(d => d.data().verification_status === 'disetujui');
+  const anyRejected = requiredDocs.some(d => d.data().verification_status === 'ditolak');
 
   const studentRef = doc(db, 'students', data.student_id);
   if (allVerified) await updateDoc(studentRef, { pendaftaran_status: 'terverifikasi' });

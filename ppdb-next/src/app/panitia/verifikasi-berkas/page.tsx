@@ -134,6 +134,7 @@ export default function VerifikasiBerkasPage() {
                           )}
                           <div className="flex-1 min-w-0">
                             <div className="text-sm font-medium text-slate-700 uppercase">{doc.file_type}</div>
+                            {doc.is_optional && <span className="text-xs text-blue-500">Opsional</span>}
                             <StatusBadge status={doc.verification_status} />
                             {doc.rejection_note && <p className="text-xs text-red-500 mt-0.5">{doc.rejection_note}</p>}
                           </div>
