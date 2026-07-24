@@ -86,6 +86,11 @@ export async function apiVerifyDocument(docId: string, status: string, note?: st
   return { success: true };
 }
 
+export async function apiDeletePayment(paymentId: string) {
+  await deleteDoc(doc(db, 'payments', paymentId));
+  return { success: true };
+}
+
 export async function apiGetPayments(): Promise<any[]> {
   const snap = await getDocs(collection(db, 'payments'));
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
