@@ -56,11 +56,10 @@ export default function KepsekDashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {[
           { icon: '👥', label: 'Mendaftar', value: students.length, color: 'text-slate-800', bg: 'bg-slate-50' },
           { icon: '📋', label: 'Kuota', value: `${totalRegistered}/${totalQuota}`, color: 'text-blue-600', bg: 'bg-blue-50', small: true },
-          { icon: '✅', label: 'Terverifikasi', value: students.filter((s: any) => s.pendaftaran_status === 'terverifikasi').length, color: 'text-blue-600', bg: 'bg-blue-50' },
           { icon: '❌', label: 'Ditolak', value: rejected, color: 'text-red-600', bg: 'bg-red-50' },
           { icon: '🎓', label: 'Lulus', value: graduated, color: 'text-emerald-600', bg: 'bg-emerald-50' },
         ].map((s, i) => (
