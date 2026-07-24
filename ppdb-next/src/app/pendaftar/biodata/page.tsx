@@ -28,8 +28,11 @@ export default function BiodataPage() {
 
   useEffect(() => {
     if (!user) { router.push('/auth/login'); return; }
-    apiGetQuotas().then(setQuotas);
-    apiGetStudents().then(students => {
+    Promise.all([apiGetQuotas(), apiGetStudents()]).then(([allQuotas, students]) => {
+      setQuotas(allQuotas);
+      const today = new Date().toISOString().split('T')[0];
+      const active = allQuotas.find((q: any) => q.deadline >= today && (q.current_count || 0) < q.max_quota);
+
       const s = students.find((st: any) => st.user_id === user.id);
       setStudent(s);
       if (s) {
@@ -47,7 +50,7 @@ export default function BiodataPage() {
           gelombang: s.gelombang || '',
         });
       } else {
-        setForm(prev => ({ ...prev, name: user.name }));
+        setForm({ name: user.name, nisn: '', nik: '', tempat_lahir: '', tanggal_lahir: '', jenis_kelamin: '', agama: '', alamat: '', telepon: '', asal_sekolah: '', gelombang: active?.program || '' });
       }
     });
   }, [user, router]);
@@ -141,10 +144,8 @@ export default function BiodataPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Gelombang</label>
-            <select name="gelombang" className="input" value={form.gelombang} onChange={handleChange} required>
-              <option value="">Pilih gelombang</option>
-              {quotas.map(q => <option key={q.id} value={q.program}>{q.program}</option>)}
-            </select>
+            <input className="input" value={form.gelombang || 'Tidak ada gelombang aktif'} disabled />
+            {!form.gelombang && <p className="text-xs text-red-500 mt-1">Tidak ada gelombang yang tersedia saat ini</p>}
           </div>
           <button type="submit" className="btn btn-primary">Simpan Biodata</button>
         </form>
