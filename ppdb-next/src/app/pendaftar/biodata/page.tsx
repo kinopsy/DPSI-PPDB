@@ -136,8 +136,8 @@ export default function BiodataPage() {
             <textarea name="alamat" className="input" rows={3} value={form.alamat} onChange={handleChange} required />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Asal Sekolah</label>
-            <input name="asal_sekolah" className="input" value={form.asal_sekolah} onChange={handleChange} required />
+            <label className="block text-sm font-medium text-slate-700 mb-1">Asal Sekolah <span className="text-slate-400 font-normal">(opsional)</span></label>
+            <input name="asal_sekolah" className="input" value={form.asal_sekolah} onChange={handleChange} />
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Gelombang</label>
