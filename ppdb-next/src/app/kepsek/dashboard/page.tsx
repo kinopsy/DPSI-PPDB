@@ -37,7 +37,10 @@ export default function KepsekDashboard() {
   if (!user) return null;
 
   const totalQuota = quotas.reduce((sum: number, q: any) => sum + q.max_quota, 0);
-  const totalRegistered = quotas.reduce((sum: number, q: any) => sum + (q.current_count || 0), 0);
+  const totalRegistered = quotas.reduce((sum: number, q: any) => {
+    const count = students.filter((s: any) => s.gelombang === q.program).length;
+    return sum + count;
+  }, 0);
   const revenue = payments.filter((p: any) => p.payment_status === 'lunas').reduce((sum: number, p: any) => sum + (p.amount || 250000), 0);
   const rejected = students.filter((s: any) => s.pendaftaran_status === 'belum_lengkap').length;
   const graduated = students.filter((s: any) => s.pendaftaran_status === 'lulus').length;
@@ -74,12 +77,13 @@ export default function KepsekDashboard() {
           <h3 className="text-sm font-semibold text-slate-800 uppercase tracking-wider mb-5">Kuota per Kelas</h3>
           <div className="space-y-4">
             {quotas.map((q: any) => {
-              const pct = Math.round((q.current_count / q.max_quota) * 100);
+              const count = students.filter((s: any) => s.gelombang === q.program).length;
+              const pct = Math.round((count / q.max_quota) * 100);
               return (
                 <div key={q.id}>
                   <div className="flex justify-between text-sm mb-2">
                     <span className="font-medium text-slate-700">{q.program}</span>
-                    <span className="text-slate-400">{q.current_count}/{q.max_quota}</span>
+                    <span className="text-slate-400">{count}/{q.max_quota}</span>
                   </div>
                   <div className="w-full bg-slate-100 rounded-full h-2">
                     <div className={`h-2 rounded-full transition-all duration-500 ${pct > 80 ? 'bg-amber-400' : 'bg-[#1D20DA]'}`} style={{ width: `${pct}%` }} />
@@ -91,21 +95,9 @@ export default function KepsekDashboard() {
         </div>
 
         <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-          <h3 className="text-sm font-semibold text-slate-800 uppercase tracking-wider mb-5">Komponen Biaya</h3>
-          <div className="space-y-2">
-            {tariffs.map((t: any) => (
-              <div key={t.id} className="flex justify-between p-3 bg-slate-50 rounded-xl">
-                <span className="text-sm text-slate-600">{t.component}</span>
-                <span className="text-sm font-semibold text-slate-800">{formatCurrency(t.amount)}</span>
-              </div>
-            ))}
-          </div>
-          <div className="mt-4 p-3 bg-slate-50 rounded-xl">
-            <div className="flex justify-between font-bold text-slate-800 text-sm">
-              <span>Total</span>
-              <span>{formatCurrency(tariffs.reduce((sum: number, t: any) => sum + t.amount, 0))}</span>
-            </div>
-          </div>
+          <h3 className="text-sm font-semibold text-slate-800 uppercase tracking-wider mb-5">Pendapatan Total</h3>
+          <div className="text-3xl font-bold text-blue-600">{formatCurrency(revenue)}</div>
+          <p className="text-sm text-slate-400 mt-2">Dari {payments.filter((p: any) => p.payment_status === 'lunas').length} pembayaran lunas</p>
         </div>
       </div>
     </div>
