@@ -1,6 +1,6 @@
-# SoT-6: Validated Data Model
+# SoT-6: Data Model
 
-**Document Version:** v1.0
+**Document Version:** v2.0
 
 **Project:** SIPDB — Sistem Informasi Penerimaan Peserta Didik Baru
 
@@ -8,9 +8,9 @@
 
 **Status:** Validated
 
-**Last Updated:** 2026-07-23
+**Last Updated:** 2026-07-24
 
-**Source:** Derived from SoT-4 (Validated User Flows) dan validasi source code (`ppdb-next/src/lib/types.ts`, `api.ts`, `firebase.ts`)
+**Source:** Derived from SoT-4 (User Flows) dan validasi source code (`ppdb-next/src/lib/types.ts`, `api.ts`, `firebase.ts`)
 
 ---
 
@@ -138,13 +138,13 @@ Collection data siswa calon pendaftar. Setiap siswa terhubung ke satu user (oran
 |---|---|---|---|
 | id | string | PK (auto-generated) | Pengenal unik — Firestore document ID |
 | user_id | string \| null | FK → users.id | Orang tua yang mendaftarkan. Null jika pendaftaran manual oleh panitia |
-| nisn | string | required | Nomor Induk Siswa Nasional |
+| nisn | string | required, 10 digit | Nomor Induk Siswa Nasional |
 | name | string | required | Nama lengkap calon siswa |
-| nik | string | required | Nomor Induk Kependudukan |
+| nik | string | required, 16 digit | Nomor Induk Kependudukan |
 | tempat_lahir | string | required | Tempat lahir |
 | tanggal_lahir | string | required | Tanggal lahir (YYYY-MM-DD) |
 | jenis_kelamin | string | required | `Laki-laki` atau `Perempuan` |
-| agama | string | required | Agama |
+| agama | string | required | Islam, Kristen, Katolik, Hindu, Buddha, Konghucu |
 | alamat | string | required | Alamat lengkap |
 | telepon | string | required | Nomor telepon/handphone |
 | asal_sekolah | string | required | Asal sekolah dasar |
@@ -165,7 +165,7 @@ Collection berkas persyaratan pendaftaran. Menggunakan pola upsert.
 |---|---|---|---|
 | id | string | PK (auto-generated) | Pengenal unik — Firestore document ID |
 | student_id | string | FK → students.id | Siswa yang memiliki berkas |
-| file_type | string | required | Jenis berkas: `kk`, `akta`, `skl`, `foto` |
+| file_type | string | required | Jenis berkas: `kk`, `akta`, `skhun`, `skl` |
 | file_path | string | required | Path/URL file di Cloudinary |
 | verification_status | string | required, default: `menunggu` | Status verifikasi |
 | rejection_note | string \| null | — | Catatan penolakan (diisi jika `ditolak`) |
@@ -201,10 +201,15 @@ Collection kuota pendaftaran per program studi.
 | Field | Tipe | Constraint | Deskripsi |
 |---|---|---|---|
 | id | string | PK (auto-generated) | Pengenal unik — Firestore document ID |
-| program | string | required | Nama program: `IPA`, `IPS`, `Bahasa` |
+| program | string | required | Nama program: `Kelas Reguler`, `Kelas Tahfidz`, `Kelas Bilingual` |
 | max_quota | number | required | Kuota maksimal penerimaan |
 | current_count | number | required | Jumlah siswa yang sudah diterima |
 | deadline | string | required | Batas waktu pendaftaran (YYYY-MM-DD) |
+
+**Program Defaults:**
+- Kelas Reguler (A): max_quota = 120
+- Kelas Tahfidz (B): max_quota = 80
+- Kelas Bilingual (C): max_quota = 40
 
 ### 3.6 tariffs
 
@@ -257,7 +262,7 @@ Collection jejak audit aktivitas. Dicatat otomatis saat verifikasi pembayaran at
 | Relasi | Field Reference | Cardinality | Deskripsi |
 |---|---|---|---|
 | users → students | `students.user_id` → `users.id` | 1:N | Satu pengguna (pendaftar) dapat mendaftarkan banyak siswa |
-| students → documents | `documents.student_id` → `students.id` | 1:N | Satu siswa memiliki banyak berkas |
+| students → documents | `documents.student_id` → `students.id` | 1:N | Satu siswa memiliki banyak berkas (KK, Akta, SKHUN, SKL) |
 | students → payments | `payments.student_id` → `students.id` | 1:1 | Satu siswa memiliki satu catatan pembayaran (upsert) |
 | students → auditLogs | `auditLogs.student` (referensi nama) | 1:N | Satu siswa dapat memiliki banyak entri audit |
 
@@ -275,18 +280,23 @@ Collection jejak audit aktivitas. Dicatat otomatis saat verifikasi pembayaran at
 ### 5.2 Aturan Siswa
 - `user_id` bisa null jika pendaftaran dilakukan secara manual oleh panitia.
 - `pendaftaran_status` berubah secara otomatis berdasarkan status verifikasi berkas.
+- NISN harus tepat 10 digit, NIK harus tepat 16 digit.
 
 ### 5.3 Aturan Berkas
+- Jenis berkas: `kk`, `akta`, `skhun`, `skl` (4 jenis).
 - Pola upsert: jika `student_id` + `file_type` sudah ada, berkas diperbarui.
 - Jika semua berkas `disetujui` → siswa otomatis `terverifikasi`.
 - Jika ada berkas `ditolak` → siswa otomatis `belum_lengkap`.
+- File max 2MB, format: PDF/JPG/PNG.
 
 ### 5.4 Aturan Pembayaran
+- Biaya pendaftaran: Rp 250.000 (transfer ke BCA 1234567890).
 - Pola upsert: satu siswa hanya memiliki satu catatan pembayaran.
 - Audit log otomatis dicatat saat pembayaran diverifikasi/ditolak.
 
 ### 5.5 Aturan Kuota
 - `max_quota` tidak boleh lebih rendah dari `current_count`.
+- Program: Kelas Reguler (120), Kelas Tahfidz (80), Kelas Bilingual (40).
 
 ---
 
@@ -313,3 +323,6 @@ Collection jejak audit aktivitas. Dicatat otomatis saat verifikasi pembayaran at
 | Relationships | ✅ Validated | Relasi sesuai dengan query di `api.ts` |
 | Business Rules | ✅ Validated | Aturan sesuai dengan implementasi `apiVerifyDocument`, `apiCreatePayment`, `apiVerifyPayment` |
 | Indexes | ✅ Validated | Query patterns sesuai dengan penggunaan di `api.ts` |
+| Programs | ✅ Validated | Sesuai dengan landing page: Reguler (120), Tahfidz (80), Bilingual (40) |
+| Doc Types | ✅ Validated | Sesuai dengan `dokumen/page.tsx`: kk, akta, skhun, skl |
+| Payment | ✅ Validated | Sesuai dengan `pembayaran/page.tsx`: Rp 250.000, BCA |

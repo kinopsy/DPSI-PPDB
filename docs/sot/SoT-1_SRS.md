@@ -1,6 +1,6 @@
 # SoT-1: Software Requirements Specification (SRS)
 
-**Document Version:** v1.0
+**Document Version:** v2.0
 
 **Project:** SIPDB — Sistem Informasi Penerimaan Peserta Didik Baru
 
@@ -8,7 +8,7 @@
 
 **Status:** Validated
 
-**Last Updated:** 2026-07-23
+**Last Updated:** 2026-07-24
 
 **Source:** Derived from Analisis Kebutuhan (`docs/AK/analisis_kebutuhan.md`), Wawancara (`docs/observasi/detail_wawancara.md`), and validasi source code (`ppdb-next/src/`)
 
@@ -24,11 +24,11 @@ Dokumen ini mendefinisikan kebutuhan fungsional dan non-fungsional untuk sistem 
 
 **In Scope:**
 - Registrasi dan autentikasi akun (Firebase Authentication)
-- Pengisian biodata calon siswa baru
-- Upload berkas persyaratan pendaftaran (KK, Akta Kelahiran, SKL, Foto)
-- Upload bukti transfer pembayaran manual
+- Pengisian biodata calon siswa baru (NISN 10 digit, NIK 16 digit)
+- Upload berkas persyaratan pendaftaran (KK, Akta Kelahiran, SKHUN, SKL)
+- Upload bukti transfer pembayaran manual (Rp 250.000)
 - Verifikasi berkas oleh Panitia PPDB
-- Pengaturan kuota dinamis per program studi
+- Pengaturan kuota dinamis per program (Kelas Reguler, Tahfidz, Bilingual)
 - Penentuan dan pengelolaan status kelulusan
 - Konfigurasi tarif dan komponen biaya oleh Bendahara
 - Validasi pembayaran oleh Bendahara
@@ -78,6 +78,14 @@ Dokumen ini mendefinisikan kebutuhan fungsional dan non-fungsional untuk sistem 
 | File Storage | Cloudinary (cloud) |
 | Project Firebase | `dpsi-ppdb` |
 
+### 2.3 Program Studi
+
+| Program | Kuota | Deskripsi |
+|---|---|---|
+| Kelas Reguler (A) | 120 siswa | Kurikulum nasional dengan pendekatan modern |
+| Kelas Tahfidz (B) | 80 siswa | Integrasi kurikulum nasional dengan tahfidz Qur'an |
+| Kelas Bilingual (C) | 40 siswa | Pembelajaran dengan metode bilingual Indonesia-Inggris |
+
 ---
 
 ## 3. System Features & Feature Inventory
@@ -86,11 +94,11 @@ Dokumen ini mendefinisikan kebutuhan fungsional dan non-fungsional untuk sistem 
 |---|---|---|---|
 | F-01 | Registrasi akun pendaftar | Auth | Must Have |
 | F-02 | Login autentikasi (email + password) | Auth | Must Have |
-| F-03 | Pengisian biodata calon siswa | Pendaftar | Must Have |
-| F-04 | Upload berkas persyaratan (KK, Akta, SKL, Foto) | Pendaftar | Must Have |
-| F-05 | Upload bukti transfer pembayaran | Pendaftar | Must Have |
+| F-03 | Pengisian biodata calon siswa (NISN 10 digit, NIK 16 digit) | Pendaftar | Must Have |
+| F-04 | Upload berkas persyaratan (KK, Akta, SKHUN, SKL) | Pendaftar | Must Have |
+| F-05 | Upload bukti transfer pembayaran (Rp 250.000) | Pendaftar | Must Have |
 | F-06 | Monitoring status pendaftaran | Pendaftar | Must Have |
-| F-07 | Dashboard pendaftar (antrian, status, kuota) | Pendaftar | Must Have |
+| F-07 | Dashboard pendaftar (progres, status, menu cepat) | Pendaftar | Must Have |
 | F-08 | Verifikasi berkas (Setujui/Tolak + catatan) | Panitia | Must Have |
 | F-09 | Pengaturan kuota dinamis per program | Panitia | Must Have |
 | F-10 | Pengelolaan status kelulusan | Panitia | Must Have |
@@ -136,7 +144,7 @@ Dokumen ini mendefinisikan kebutuhan fungsional dan non-fungsional untuk sistem 
 | NF-04 | Performa | Aplikasi harus responsif (mobile-friendly) |
 | NF-05 | Ketersediaan | Firebase Cloud — 99.9% uptime |
 | NF-06 | Skalabilitas | Firestore NoSQL — scale otomatis sesuai traffic |
-| NF-07 | Integrasi | File storage via Cloudinary (upload gambar/berkas) |
+| NF-07 | Integrasi | File storage via Cloudinary (upload gambar/berkas, max 2MB) |
 | NF-08 | Kemudahan | Interface intuitif — orang tua tanpa tech-savvy dapat menggunakannya |
 
 ---
@@ -148,23 +156,32 @@ Dokumen ini mendefinisikan kebutuhan fungsional dan non-fungsional untuk sistem 
 - Status pendaftaran default: `menunggu_verifikasi`.
 - `user_id` pada siswa bisa `null` jika pendaftaran dilakukan manual oleh panitia.
 
-### 6.2 Aturan Berkas
+### 6.2 Aturan Validasi Input
+- NISN harus tepat 10 digit.
+- NIK harus tepat 16 digit.
+- Password minimal 6 karakter.
+- File upload maksimal 2MB.
+- Format file: PDF, JPG, PNG (berkas); JPG, PNG (bukti bayar).
+
+### 6.3 Aturan Berkas
+- Jenis berkas: KK (`kk`), Akta Kelahiran (`akta`), SKHUN (`skhun`), SKL (`skl`).
 - Menggunakan pola upsert: jika `student_id` + `file_type` sudah ada, berkas diperbarui.
 - Jika semua berkas `disetujui` → siswa otomatis `terverifikasi`.
 - Jika ada berkas `ditolak` → siswa otomatis `belum_lengkap`.
 
-### 6.3 Aturan Pembayaran
+### 6.4 Aturan Pembayaran
+- Biaya pendaftaran: **Rp 250.000** (transfer ke BCA 1234567890 a.n SD Muhammadiyah Karangkajen).
 - Pendaftar cukup upload foto bukti transfer (tanpa form teks tambahan).
 - Menggunakan pola upsert: satu siswa hanya memiliki satu catatan pembayaran.
 - Bendahara memvalidasi berdasarkan mutasi rekening sekolah.
 
-### 6.4 Aturan Kuota
+### 6.5 Aturan Kuota
 - Kuota dapat diubah di tengah jalan saat pendaftaran aktif.
 - Perubahan kuota ke angka yang lebih rendah dari jumlah siswa yang sudah dinyatakan lulus otomatis ditolak sistem.
 
-### 6.5 Aturan Kelulusan
+### 6.6 Aturan Kelulusan
 - Hanya panitia yang dapat menentukan kelulusan.
-- Status kelulusan: `lulus` — dinyatakan oleh kepala sekolah/panitia.
+- Status kelulusan: `lulus` — dinyatakan oleh panitia.
 
 ---
 
@@ -177,6 +194,9 @@ Dokumen ini mendefinisikan kebutuhan fungsional dan non-fungsional untuk sistem 
 | Business Rules | ✅ Validated | Sesuai dengan implementasi `apiVerifyDocument`, `apiCreatePayment`, `apiVerifyPayment` |
 | Tech Stack | ✅ Validated | Sesuai dengan `firebase.ts`, `package.json` |
 | Routes | ✅ Validated | 19 page routes sesuai dengan struktur `src/app/` |
+| Doc Types | ✅ Validated | Sesuai dengan `DOC_TYPES` di `dokumen/page.tsx`: kk, akta, skhun, skl |
+| Programs | ✅ Validated | Sesuai dengan landing page: Kelas Reguler (A), Tahfidz (B), Bilingual (C) |
+| Payment | ✅ Validated | Sesuai dengan `pembayaran/page.tsx`: Rp 250.000, BCA 1234567890 |
 
 ---
 
@@ -186,9 +206,9 @@ Dokumen ini mendefinisikan kebutuhan fungsional dan non-fungsional untuk sistem 
 |---|---|---|
 | F-01: Registrasi | Wawancara — pendaftar daftar online | `AuthContext.tsx` → `createUserWithEmailAndPassword` |
 | F-02: Login | Wawancara — autentikasi user | `AuthContext.tsx` → `signInWithEmailAndPassword` |
-| F-03: Biodata | Analisis Kebutuhan — form data siswa | `apiCreateStudent`, `apiUpdateStudent` |
-| F-04: Upload Berkas | Analisis Kebutuhan — persyaratan berkas | `apiUpsertDocument` |
-| F-05: Bukti Bayar | Wawancara — upload bukti transfer | `apiCreatePayment` |
+| F-03: Biodata | Analisis Kebutuhan — form data siswa | `apiCreateStudent`, `apiUpdateStudent` + validasi NISN/NIK |
+| F-04: Upload Berkas | Analisis Kebutuhan — persyaratan berkas | `apiUpsertDocument` (kk, akta, skhun, skl) |
+| F-05: Bukti Bayar | Wawancara — upload bukti transfer | `apiCreatePayment` (Rp 250.000) |
 | F-08: Verifikasi Berkas | Analisis Kebutuhan — panitia verifikasi | `apiVerifyDocument` |
 | F-09: Kuota Dinamis | Wawancara — kuota bisa diubah | `apiUpdateQuota` |
 | F-13: Validasi Bayar | Wawancara — bendahara validasi | `apiVerifyPayment` |
