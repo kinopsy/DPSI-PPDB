@@ -36,7 +36,11 @@ export default function KepsekDashboard() {
 
   if (!user) return null;
 
-  const revenue = payments.filter((p: any) => p.payment_status === 'lunas').length * 250000;
+  const totalQuota = quotas.reduce((sum: number, q: any) => sum + q.max_quota, 0);
+  const totalRegistered = quotas.reduce((sum: number, q: any) => sum + (q.current_count || 0), 0);
+  const revenue = payments.filter((p: any) => p.payment_status === 'lunas').reduce((sum: number, p: any) => sum + (p.amount || 250000), 0);
+  const rejected = students.filter((s: any) => s.pendaftaran_status === 'belum_lengkap').length;
+  const graduated = students.filter((s: any) => s.pendaftaran_status === 'lulus').length;
 
   return (
     <div className="animate-fadeIn">
@@ -49,12 +53,13 @@ export default function KepsekDashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
         {[
-          { icon: '👥', label: 'Total', value: students.length, color: 'text-slate-800', bg: 'bg-slate-50' },
+          { icon: '👥', label: 'Mendaftar', value: students.length, color: 'text-slate-800', bg: 'bg-slate-50' },
+          { icon: '📋', label: 'Kuota', value: `${totalRegistered}/${totalQuota}`, color: 'text-blue-600', bg: 'bg-blue-50', small: true },
           { icon: '✅', label: 'Terverifikasi', value: students.filter((s: any) => s.pendaftaran_status === 'terverifikasi').length, color: 'text-blue-600', bg: 'bg-blue-50' },
-          { icon: '🎓', label: 'Lulus', value: students.filter((s: any) => s.pendaftaran_status === 'lulus').length, color: 'text-blue-600', bg: 'bg-blue-50' },
-          { icon: '💰', label: 'Pendapatan', value: formatCurrency(revenue), color: 'text-violet-600', bg: 'bg-violet-50', small: true },
+          { icon: '❌', label: 'Ditolak', value: rejected, color: 'text-red-600', bg: 'bg-red-50' },
+          { icon: '🎓', label: 'Lulus', value: graduated, color: 'text-emerald-600', bg: 'bg-emerald-50' },
         ].map((s, i) => (
           <div key={i} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
             <div className={`w-10 h-10 rounded-xl ${s.bg} flex items-center justify-center text-lg mb-3`}>{s.icon}</div>
