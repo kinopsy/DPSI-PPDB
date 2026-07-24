@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { apiGetStudents, apiUpdateStudent } from '@/lib/api';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { apiUpdateStudent } from '@/lib/api';
 import { StatusBadge, Toast } from '@/components/UI';
 
 export default function KelulusanPage() {
@@ -12,13 +14,12 @@ export default function KelulusanPage() {
   const [toast, setToast] = useState<{ message: string; type: string } | null>(null);
   const [students, setStudents] = useState<any[]>([]);
 
-  const loadStudents = () => {
-    apiGetStudents().then(setStudents);
-  };
-
   useEffect(() => {
     if (!user || user.role !== 'panitia') { router.push('/auth/login'); return; }
-    loadStudents();
+    const unsub = onSnapshot(collection(db, 'students'), snap => {
+      setStudents(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+    return () => unsub();
   }, [user, router]);
   if (!user) return null;
 
@@ -26,7 +27,6 @@ export default function KelulusanPage() {
 
   const handleSetGraduation = async (studentId: string, status: string) => {
     await apiUpdateStudent(studentId, { pendaftaran_status: status });
-    loadStudents();
     setToast({ message: `Status siswa diperbarui`, type: 'success' });
   };
 
