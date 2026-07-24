@@ -10,7 +10,7 @@
 
 **Last Updated:** 2026-07-23
 
-**Source:** Derived from SoT-3 (Validated Design System) and validasi source code (`ppdb-next/src/app/`, `api.ts`, `AuthContext.tsx`)
+
 
 ---
 
