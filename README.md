@@ -29,27 +29,36 @@ Aplikasi PPDB Online untuk **SD Muhammadiyah Karangkajen Yogyakarta**. Dibangun 
 
 | Role | Akses |
 |------|-------|
-| **Pendaftar** | Registrasi akun, pengisian biodata, upload berkas (KK & Akta), upload bukti transfer, melihat status pendaftaran |
-| **Panitia** | Verifikasi berkas, kuota dinamis, manajemen kelulusan, buat pengumuman |
-| **Bendahara** | Verifikasi pembayaran, pengaturan tarif biaya, audit log |
+| **Pendaftar** | Registrasi akun, pengisian biodata (NISN 10 digit, NIK 16 digit), upload berkas (KK, Akta, SKHUN, SKL), upload bukti transfer (Rp 250.000), melihat status pendaftaran |
+| **Panitia** | Verifikasi berkas (setujui/tolak + catatan), kuota dinamis (Reguler/Tahfidz/Bilingual), manajemen kelulusan, buat pengumuman |
+| **Bendahara** | Verifikasi pembayaran (lunas/ditolak), pengaturan tarif biaya, audit log |
 | **Kepala Sekolah** | Dashboard ringkasan eksekutif (read-only) |
+
+### Program Studi
+
+| Program | Kuota | Deskripsi |
+|---------|-------|-----------|
+| Kelas Reguler (A) | 120 siswa | Kurikulum nasional dengan pendekatan modern |
+| Kelas Tahfidz (B) | 80 siswa | Integrasi kurikulum nasional dengan tahfidz Qur'an |
+| Kelas Bilingual (C) | 40 siswa | Pembelajaran metode bilingual Indonesia-Inggris |
 
 ### Alur Sistem
 
 ```
 Registrasi → Login → Pengisian Biodata → Upload Berkas → Verifikasi Berkas (Panitia)
-    → Upload Bukti Transfer → Verifikasi Pembayaran (Bendahara)
+    → Upload Bukti Transfer (Rp 250.000) → Verifikasi Pembayaran (Bendahara)
     → Penentuan Kelulusan (Panitia) → Pengumuman
 ```
 
-### Kredensial Demo (Frontend Prototype)
+### Kredensial Demo
 
 | Role | Email | Password |
 |------|-------|----------|
-| Pendaftar | `evan@user.com` | `123456` |
-| Panitia | `haidar@gmail.com` | `123456` |
-| Bendahara | `sudrajat@user.com` | `123456` |
-| Kepala Sekolah | `alfiardichannel@gmail.com` | `12345678` |
+| Pendaftar | `jaya@gmail.com` | `123456` |
+| Panitia | `sukarno@gmail.com` | `123456` |
+| Bendahara | `sudrajat@gmail.com` | `123456` |
+| Bendahara | `rahmi@gmail.com` | `123456` |
+| Kepala Sekolah | `herman@gmail.com` | `123456` |
 
 ## Source of Truth (SoT)
 
@@ -57,19 +66,35 @@ Dokumen-dokumen berikut didefinisikan mengikuti metodologi **Chain of Truth** (f
 
 | SoT | Dokumen | Deskripsi |
 |-----|---------|-----------|
-| **SoT-1** | [`SoT-1_Validated_SRS.md`](docs/sot/SoT-1_Validated_SRS.md) | Software Requirements Specification — 18 fitur, 4 role, business rules, NFR |
-| **SoT-2** | [`SoT-2_Validated_Information_Architecture.md`](docs/sot/SoT-2_Validated_Information_Architecture.md) | Information Architecture — 5 modul, 19 routes, site map, routing rules |
-| **SoT-3** | [`SoT-3_Validated_Design_System.md`](docs/sot/SoT-3_Validated_Design_System.md) | Design System — color palette, typography, component library, responsive breakpoints |
-| **SoT-4** | [`SoT-4_Validated_User_Flows.md`](docs/sot/SoT-4_Validated_User_Flows.md) | User Flow Specifications — 7 use cases (UC-001 s/d UC-007), flow detail, business rules |
-| **SoT-5** | [`SoT-5_Validated_Prototype.md`](docs/sot/SoT-5_Validated_Prototype.md) | Prototype Reference — page-by-page mapping, shared components, data flow diagrams |
-| **SoT-6** | [`SoT-6_Validated_Data_Model.md`](docs/sot/SoT-6_Validated_Data_Model.md) | Data Model — 8 Firestore collections, field definitions, relationships, indexes |
-| **SoT-7** | [`SoT-7_Validated_UCIC.md`](docs/sot/SoT-7_Validated_UCIC.md) | Use Case Integration Contract — mapping UC → UI → DB → API, 18 API functions |
+| **SoT-1** | [`SoT-1_SRS.md`](docs/sot/SoT-1_SRS.md) | Software Requirements Specification — 18 fitur, 4 role, business rules, NFR |
+| **SoT-2** | [`SoT-2_IA.md`](docs/sot/SoT-2_IA.md) | Information Architecture — 5 modul, 19 routes, layout strategy, routing rules |
+| **SoT-3** | [`SoT-3_Design_System.md`](docs/sot/SoT-3_Design_System.md) | Design System — color palette, typography, component library, responsive breakpoints |
+| **SoT-4** | [`SoT-4_User_Flows.md`](docs/sot/SoT-4_User_Flows.md) | User Flow Specifications — 7 use cases (UC-001 s/d UC-007), flow detail, business rules |
+| **SoT-5** | [`SoT-5_Prototype.md`](docs/sot/SoT-5_Prototype.md) | Prototype Reference — component hierarchy, page-by-page mapping, data flow diagrams |
+| **SoT-6** | [`SoT-6_Data_Model.md`](docs/sot/SoT-6_Data_Model.md) | Data Model — 8 Firestore collections, field definitions, relationships, indexes |
+| **SoT-7** | [`SoT-7_UCIC.md`](docs/sot/SoT-7_UCIC.md) | Use Case Integration Contract — mapping UC → UI → DB → API, 18 API functions |
+
+### User Flow Diagrams
+
+Detail diagram untuk setiap use case tersedia di [`docs/sot/user_flow/`](docs/sot/user_flow/):
+
+| File | Use Case |
+|------|----------|
+| [`userflow_UC-001.md`](docs/sot/user_flow/userflow_UC-001.md) | Registrasi & Login Akun |
+| [`userflow_UC-002.md`](docs/sot/user_flow/userflow_UC-002.md) | Pengisian Formulir & Upload Berkas Wajib |
+| [`userflow_UC-003.md`](docs/sot/user_flow/userflow_UC-003.md) | Pengaturan Kuota Dinamis & Tarif |
+| [`userflow_UC-004.md`](docs/sot/user_flow/userflow_UC-004.md) | Verifikasi Berkas & Notifikasi Revisi |
+| [`userflow_UC-005.md`](docs/sot/user_flow/userflow_UC-005.md) | Upload Bukti & Verifikasi Pembayaran |
+| [`userflow_UC-006.md`](docs/sot/user_flow/userflow_UC-006.md) | Penentuan & Penerbitan Kelulusan |
+| [`userflow_UC-007.md`](docs/sot/user_flow/userflow_UC-007.md) | Pemantauan Dashboard Eksekutif |
 
 **Koneksi antar SoT:**
 ```
 SoT-1 (SRS) → SoT-2 (IA) → SoT-3 (Design System)
                                     ↓
 SoT-4 (User Flows) → SoT-5 (Prototype) → SoT-6 (Data Model) → SoT-7 (UCIC)
+                                    ↓
+                        user_flow/ (per UC diagrams)
 ```
 
 ## Installation
@@ -85,26 +110,26 @@ SoT-4 (User Flows) → SoT-5 (Prototype) → SoT-6 (Data Model) → SoT-7 (UCIC)
 
 ```bash
 # 1. Clone repository
-git clone <repository-url> DPSI-PPDB
+git clone https://github.com/kinopsy/DPSI-PPDB.git
 cd DPSI-PPDB
 
 # 2. Install dependencies (Next.js app)
 cd ppdb-next
 npm install
 
-# 3. Buat file .env.local (opsional — Firebase config hardcode di firebase.ts)
-# Berisi environment variables jika diperlukan
-
-# 4. Jalankan development server
+# 3. Jalankan development server
 npm run dev
 
-# 5. Buka browser
+# 4. Buka browser
 # http://localhost:3000
 ```
 
 ### Frontend Prototype (Static HTML)
 
 ```bash
+# Catatan: ppdb-frontend adalah prototipe independen TANPA backend
+# Semua data disimpan di localStorage, bukan Firebase
+
 # Tanpa server — buka langsung
 # Buka ppdb-frontend/index.html di browser
 
@@ -120,26 +145,29 @@ python -m http.server 8000
 DPSI-PPDB/
 ├── docs/                               # Dokumen proyek
 │   ├── sot/                            # Source of Truth (Chain of Truth)
-│   │   ├── SoT-1_Validated_SRS.md
-│   │   ├── SoT-2_Validated_Information_Architecture.md
-│   │   ├── SoT-3_Validated_Design_System.md
-│   │   ├── SoT-4_Validated_User_Flows.md
-│   │   ├── SoT-5_Validated_Prototype.md
-│   │   ├── SoT-6_Validated_Data_Model.md
-│   │   └── SoT-7_Validated_UCIC.md
-│   ├── 01-requirements/                # SRS (SoT-1) — legacy
-│   ├── 02-architecture/                # IA (SoT-2), SAD (SoT-5) — legacy
-│   ├── 03-design/                      # Design System (SoT-3) — legacy
-│   ├── 04-user-flows/                  # User Flows (SoT-4) — legacy
-│   ├── 05-api/                         # API Contract (SoT-6) — legacy
-│   ├── 06-integration/                 # Integration (SoT-7) — legacy
-│   ├── AK/                             # Analisis Kebutuhan (merged Fase 1 + Praktikum 1)
+│   │   ├── SoT-1_SRS.md
+│   │   ├── SoT-2_IA.md
+│   │   ├── SoT-3_Design_System.md
+│   │   ├── SoT-4_User_Flows.md
+│   │   ├── SoT-5_Prototype.md
+│   │   ├── SoT-6_Data_Model.md
+│   │   ├── SoT-7_UCIC.md
+│   │   └── user_flow/                  # User flow diagrams per UC
+│   │       ├── userflow_UC-001.md
+│   │       ├── userflow_UC-002.md
+│   │       ├── userflow_UC-003.md
+│   │       ├── userflow_UC-004.md
+│   │       ├── userflow_UC-005.md
+│   │       ├── userflow_UC-006.md
+│   │       └── userflow_UC-007.md
+|
+|
 │   ├── analisis_kebutuhan/             # Analisis Kebutuhan — original
 │   ├── class_diagram/                  # Class Diagram & Data Model (Firestore)
 │   └── observasi/                      # Transkrip Wawancara
-├── ppdb-next/                          # Aplikasi utama (Next.js)
+├── ppdb-next/                          # Aplikasi utama (Next.js + Firebase)
 │   ├── src/
-│   │   ├── app/                        # Next.js App Router pages
+│   │   ├── app/                        # Next.js App Router pages (19 routes)
 │   │   │   ├── auth/                   # Login & Register
 │   │   │   ├── pendaftar/              # Dashboard pendaftar
 │   │   │   ├── panitia/                # Dashboard panitia
@@ -147,27 +175,21 @@ DPSI-PPDB/
 │   │   │   ├── kepsek/                 # Dashboard kepsek
 │   │   │   └── pengumuman/             # Halaman pengumuman publik
 │   │   ├── components/                 # Shared components
-│   │   │   ├── DashboardLayout.tsx     # Layout dengan sidebar
+│   │   │   ├── Providers.tsx           # AuthProvider + DashboardLayout wrapper
+│   │   │   ├── DashboardLayout.tsx     # Auth guard + Sidebar + Header
 │   │   │   ├── Sidebar.tsx             # Navigasi sidebar per role
-│   │   │   ├── Navbar.tsx              # Navbar publik
-│   │   │   ├── Providers.tsx           # Auth & layout provider
-│   │   │   └── UI.tsx                  # Shared UI components
+│   │   │   ├── Navbar.tsx              # Navbar publik (desktop + mobile)
+│   │   │   └── UI.tsx                  # Modal, Toast, StatusBadge, FileUpload
 │   │   ├── context/
 │   │   │   └── AuthContext.tsx          # Firebase Auth context
 │   │   └── lib/
 │   │       ├── firebase.ts             # Firebase config & init
-│   │       ├── api.ts                  # Firestore CRUD API
-│   │       ├── types.ts                # TypeScript interfaces
-│   │       └── cloudinary.ts           # Cloudinary upload
-│   ├── public/                         # Static assets
+│   │       ├── api.ts                  # Firestore CRUD API (18 functions)
+│   │       ├── types.ts                # TypeScript interfaces (8 collections)
+│   │       └── cloudinary.ts           # Cloudinary upload utility
+│   ├── public/                         # Static assets (logo.png)
 │   └── package.json
-├── ppdb-frontend/                      # Frontend prototype (static HTML)
-│   ├── index.html                      # SPA entry point
-│   ├── assets/
-│   │   ├── css/                        # Design system & layout
-│   │   └── js/                         # Router, app, mock data, pages
-│   └── IMPLEMENTATION_NOTES.md
-├── contoh_README.md                    # Contoh format README
+|
 └── README.md                           # File ini
 ```
 
@@ -181,10 +203,19 @@ DPSI-PPDB/
 | UI Library | React 19 |
 | Language | TypeScript 5 |
 | Styling | Tailwind CSS 4 |
-| Authentication | Firebase Authentication |
-| Database | Firebase Firestore (NoSQL) |
-| File Storage | Cloudinary |
-| Deployment | Vercel (frontend) |
+| Authentication | Firebase Authentication (email + password) |
+| Database | Firebase Firestore (NoSQL, project: `dpsi-ppdb`) |
+| File Storage | Cloudinary (cloud name: `fb73ycvg`, preset: `ppdb_ml_default`) |
+| Deployment | Vercel |
+
+### Component Architecture
+
+```
+RootLayout
+  └─ Providers (AuthProvider + DashboardLayout)
+       ├─ [Public] Navbar + children (tanpa sidebar)
+       └─ [Dashboard] Sidebar + Header + children
+```
 
 ### Alur Autentikasi
 
@@ -194,6 +225,7 @@ LoginPage
         └─ getDoc(doc(db, 'users', uid))
               └─ { name, email, role }
                     └─ setUser() → AuthContext
+                          └─ DashboardLayout: render Sidebar + Header
                           └─ redirect ke /{role}/dashboard
 ```
 
@@ -204,8 +236,8 @@ Panitia klik "Setujui"/"Tolak"
   └─ apiVerifyDocument(docId, status, note)
         └─ updateDoc(doc, { verification_status, rejection_note })
         └─ query semua berkas siswa
-              └─ semua disetujui? →学生.pendaftaran_status = 'terverifikasi'
-              └─ ada yang ditolak? →学生.pendaftaran_status = 'belum_lengkap'
+              └─ semua disetujui? → students.pendaftaran_status = 'terverifikasi'
+              └─ ada yang ditolak? → students.pendaftaran_status = 'belum_lengkap'
 ```
 
 ### Alur Verifikasi Pembayaran
@@ -246,25 +278,25 @@ Bendahara klik "Lunas"/"Tolak"
 
 ### Route Definitions
 
-Semua route menggunakan **Next.js App Router** (file-based routing).
+Semua route menggunakan **Next.js App Router** (file-based routing). Total: **19 routes**.
 
 | Path | Role | Halaman |
 |------|------|---------|
-| `/` | Publik | Beranda (homepage) |
-| `/auth/login` | — | Login |
-| `/auth/register` | — | Register |
+| `/` | Publik | Beranda (hero, stats, fitur, program, pengumuman, CTA) |
+| `/auth/login` | — | Login (split layout: gradient + form) |
+| `/auth/register` | — | Register (split layout: gradient + form) |
 | `/pengumuman` | Publik | Daftar pengumuman |
-| `/pendaftar/dashboard` | Pendaftar | Dashboard pendaftar |
-| `/pendaftar/biodata` | Pendaftar | Form pengisian biodata |
-| `/pendaftar/dokumen` | Pendaftar | Upload berkas persyaratan |
-| `/pendaftar/pembayaran` | Pendaftar | Upload bukti transfer |
+| `/pendaftar/dashboard` | Pendaftar | Dashboard (progres, status, menu cepat) |
+| `/pendaftar/biodata` | Pendaftar | Form biodata (11 fields) |
+| `/pendaftar/dokumen` | Pendaftar | Upload berkas (KK, Akta, SKHUN, SKL) |
+| `/pendaftar/pembayaran` | Pendaftar | Upload bukti transfer (Rp 250.000) |
 | `/pendaftar/status` | Pendaftar | Status pendaftaran |
 | `/panitia/dashboard` | Panitia | Dashboard panitia |
 | `/panitia/verifikasi-berkas` | Panitia | Verifikasi berkas pendaftar |
 | `/panitia/kuota-dinamis` | Panitia | Pengaturan kuota per program |
 | `/panitia/kelulusan` | Panitia | Manajemen kelulusan |
 | `/panitia/pengumuman` | Panitia | Buat & kelola pengumuman |
-| `/bendahara/dashboard` | Bendahara | Dashboard bendahara |
+| `/bendahara/dashboard` | Bendahara | Dashboard (rekap pembayaran) |
 | `/bendahara/verifikasi-pembayaran` | Bendahara | Validasi pembayaran |
 | `/bendahara/tarif-biaya` | Bendahara | Pengaturan komponen biaya |
 | `/bendahara/audit-log` | Bendahara | Jejak audit aktivitas |
@@ -272,30 +304,31 @@ Semua route menggunakan **Next.js App Router** (file-based routing).
 
 ### Layout Strategy
 
-- **Publik** (`/`, `/auth/*`, `/pengumuman`): Menggunakan `Navbar` saja tanpa sidebar
-- **Dashboard** (`/pendaftar/*`, `/panitia/*`, `/bendahara/*`, `/kepsek/*`): Menggunakan `DashboardLayout` dengan sidebar + header
+- **Publik** (`/`, `/auth/*`, `/pengumuman`): `DashboardLayout` render `<>{children}</>` + `Navbar`
+- **Dashboard** (`/pendaftar/*`, `/panitia/*`, `/bendahara/*`, `/kepsek/*`): `DashboardLayout` dengan `Sidebar` + `Header` + main content
 
 ### Auth Guard
 
 ```
-AuthContext:
-  if (!user && path bukan /auth/*) → redirect ke /auth/login
-  if (user && path == /auth/*)     → redirect ke /{role}/dashboard
+DashboardLayout:
+  if (loading) → spinner "Memuat..."
+  if (!user) → render children (public mode)
+  if (user) → render Sidebar + Header + children (dashboard mode)
 ```
 
 ## Role-based Access
 
 ### Pendaftar (Orang Tua / Wali Murid)
 - **Sidebar:** Dashboard, Biodata, Dokumen, Pembayaran, Status
-- **Aksi:** Isi biodata, upload KK & Akta, upload bukti transfer, lihat status
+- **Aksi:** Isi biodata (NISN 10 digit, NIK 16 digit), upload KK/Akta/SKHUN/SKL, upload bukti transfer (Rp 250.000), lihat status
 
 ### Panitia (Admin Sekolah)
 - **Sidebar:** Dashboard, Verifikasi Berkas, Kuota Dinamis, Kelulusan, Buat Pengumuman
-- **Aksi:** Setujui/tolak berkas, atur kuota, tetapkan kelulusan, buat pengumuman
+- **Aksi:** Setujui/tolak berkas (+ catatan), atur kuota (Reguler/Tahfidz/Bilingual), tetapkan kelulusan, buat pengumuman
 
 ### Bendahara (Keuangan)
 - **Sidebar:** Dashboard, Verifikasi Pembayaran, Tarif Biaya, Audit Log
-- **Aksi:** Validasi pembayaran (lunas/tolak), kelola tarif, lihat audit log
+- **Aksi:** Validasi pembayaran (lunas/ditolak), kelola tarif, lihat audit log
 
 ### Kepala Sekolah (Eksekutif)
 - **Sidebar:** Dashboard
@@ -324,7 +357,6 @@ interface AuthUser {
 Data di-fetch langsung dari Firestore menggunakan fungsi di `api.ts`:
 
 ```typescript
-// Contoh pengambilan data
 const students = await apiGetStudents();
 const payments = await apiGetPayments();
 const quotas = await apiGetQuotas();
@@ -362,8 +394,9 @@ Tidak ada library state management tambahan — semua state dikelola secara loka
 ```typescript
 uploadToCloudinary(file: File): Promise<string>
 // Mengembalikan secure_url dari Cloudinary
-// Upload preset: ppdb_ml_default
 // Cloud name: fb73ycvg
+// Upload preset: ppdb_ml_default
+// Format: PDF, JPG, PNG (max 2MB)
 ```
 
 ## Data Model
@@ -372,55 +405,44 @@ uploadToCloudinary(file: File): Promise<string>
 
 | Collection | Deskripsi |
 |-----------|-----------|
-| `users` | Akun pengguna (Firebase Auth UID) |
-| `students` | Biodata siswa calon pendaftar |
-| `documents` | Berkas persyaratan (KK, Akta, dll.) |
-| `payments` | Bukti pembayaran |
-| `quotas` | Kuota per program studi |
+| `users` | Akun pengguna (Firebase Auth UID, role: pendaftar/panitia/bendahara/kepsek) |
+| `students` | Biodata siswa (NISN 10 digit, NIK 16 digit, status pendaftaran) |
+| `documents` | Berkas persyaratan (kk, akta, skhun, skl) + status verifikasi |
+| `payments` | Bukti pembayaran (Rp 250.000) + status verifikasi |
+| `quotas` | Kuota per program (Reguler: 120, Tahfidz: 80, Bilingual: 40) |
 | `tariffs` | Komponen biaya PPDB |
 | `announcements` | Pengumuman resmi |
-| `auditLogs` | Jejak audit aktivitas |
+| `auditLogs` | Jejak audit verifikasi pembayaran & perubahan tarif |
 
 ### TypeScript Interfaces
 
 ```typescript
 interface User {
-  id: string;
-  name: string;
-  email: string;
+  id: string; name: string; email: string;
   role: 'pendaftar' | 'panitia' | 'bendahara' | 'kepsek';
 }
 
 interface Student {
-  id: string;
-  user_id: string | null;
-  nisn: string;
-  name: string;
-  nik: string;
-  tempat_lahir: string;
-  tanggal_lahir: string;
-  jenis_kelamin: string;
-  agama: string;
-  alamat: string;
-  telepon: string;
-  asal_sekolah: string;
-  pendaftaran_status: string;
+  id: string; user_id: string | null;
+  nisn: string; name: string; nik: string;
+  tempat_lahir: string; tanggal_lahir: string;
+  jenis_kelamin: string; agama: string;
+  alamat: string; telepon: string; asal_sekolah: string;
+  pendaftaran_status: string; // menunggu_verifikasi | terverifikasi | belum_lengkap | lulus
 }
 
 interface Document {
-  id: string;
-  student_id: string;
-  file_type: string;
+  id: string; student_id: string;
+  file_type: string; // kk | akta | skhun | skl
   file_path: string;
-  verification_status: string;
+  verification_status: string; // menunggu | disetujui | ditolak
   rejection_note: string | null;
 }
 
 interface Payment {
-  id: string;
-  student_id: string;
+  id: string; student_id: string;
   proof_file_path: string;
-  payment_status: string;
+  payment_status: string; // pending | lunas | ditolak
   verified_at: string | null;
 }
 ```
@@ -428,18 +450,6 @@ interface Payment {
 Detail lengkap lihat di [`docs/class_diagram/data_model.md`](docs/class_diagram/data_model.md).
 
 ## Deployment
-
-### Next.js App (Production)
-
-```bash
-cd ppdb-next
-
-# Build
-npm run build
-
-# Output: .next/
-# Deploy ke Vercel atau platform lain yang mendukung Next.js
-```
 
 ### Vercel (Recommended)
 
@@ -454,13 +464,6 @@ vercel
 # Atau hubungkan repository GitHub ke Vercel Dashboard
 ```
 
-### Frontend Prototype
-
-```bash
-# Static files — deploy ke any web server
-# Upload seluruh folder ppdb-frontend/ ke web server (nginx, Apache, dll.)
-```
-
 ### Konfigurasi Firebase
 
 Pastikan project Firebase `dpsi-ppdb` sudah dikonfigurasi dengan:
@@ -468,13 +471,14 @@ Pastikan project Firebase `dpsi-ppdb` sudah dikonfigurasi dengan:
 - **Firestore Database:** Rules sudah disesuaikan
 - **Cloudinary:** Upload preset `ppdb_ml_default` aktif
 
+### Deployment Links
+
+- https://ppdb-next-ten.vercel.app/
+- https://github.com/kinopsy/DPSI-PPDB.git
+
 ## Troubleshooting
 
 ### `npm run dev` gagal
-
-```
-Error: Cannot find module '...'
-```
 
 ```bash
 # Hapus node_modules dan reinstall
@@ -484,19 +488,11 @@ npm install
 
 ### Firebase permission denied
 
-```
-FirebaseError: Missing or insufficient permissions
-```
-
 Pastikan Firestore Rules mengizinkan akses:
 - Development: `allow read, write: if true;`
 - Production: Sesuaikan dengan kebutuhan (lihat `data_model.md` Section 7)
 
 ### Cloudinary upload gagal
-
-```
-Error: Invalid upload preset
-```
 
 Pastikan upload preset `ppdb_ml_default` aktif di Cloudinary Dashboard.
 
@@ -508,15 +504,8 @@ Pastikan upload preset `ppdb_ml_default` aktif di Cloudinary Dashboard.
 # Contoh: /pendaftar/dashboard
 ```
 
-### Deployment
-
-- https://ppdb-next-ten.vercel.app/  
-- https://github.com/kinopsy/DPSI-PPDB.git -- repo
-
 ### TypeScript errors
 
 ```bash
-# Jalankan type checking
 npx tsc --noEmit
 ```
-
