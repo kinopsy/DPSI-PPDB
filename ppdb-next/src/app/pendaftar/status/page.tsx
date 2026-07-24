@@ -37,10 +37,24 @@ export default function StatusPage() {
         </div>
       ) : (
         <>
-          <div className="card p-6 mb-6">
-            <h3 className="font-semibold mb-3">Status Pendaftaran</h3>
-            <StatusBadge status={student.pendaftaran_status} />
-          </div>
+          {student.pendaftaran_status === 'lulus' ? (
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-8 mb-6 text-center">
+              <div className="text-5xl mb-3">🎉</div>
+              <h3 className="text-xl font-bold text-green-800 mb-1">Selamat! Anda Dinyatakan Lulus</h3>
+              <p className="text-green-600">SD Muhammadiyah Karangkajen</p>
+            </div>
+          ) : student.pendaftaran_status === 'belum_lengkap' ? (
+            <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-2xl p-8 mb-6 text-center">
+              <div className="text-5xl mb-3">😞</div>
+              <h3 className="text-xl font-bold text-red-800 mb-1">Belum Lulus</h3>
+              <p className="text-red-600">Tetap semangat!</p>
+            </div>
+          ) : (
+            <div className="card p-6 mb-6">
+              <h3 className="font-semibold mb-3">Status Pendaftaran</h3>
+              <StatusBadge status={student.pendaftaran_status} />
+            </div>
+          )}
 
           <div className="card p-6 mb-6">
             <h3 className="font-semibold mb-3">Dokumen</h3>
