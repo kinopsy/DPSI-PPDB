@@ -12,7 +12,7 @@ export default function TarifBiayaPage() {
   const [toast, setToast] = useState<{ message: string; type: string } | null>(null);
   const [tariffs, setTariffs] = useState<any[]>([]);
   const [modal, setModal] = useState<{ open: boolean; editId?: string }>({ open: false });
-  const [form, setForm] = useState({ component: '', amount: 0, description: '' });
+  const [form, setForm] = useState({ component: '', amount: '', description: '' });
 
   useEffect(() => {
     if (!user || user.role !== 'bendahara') { router.push('/auth/login'); return; }
@@ -21,15 +21,16 @@ export default function TarifBiayaPage() {
 
   if (!user) return null;
 
-  const openAdd = () => { setForm({ component: '', amount: 0, description: '' }); setModal({ open: true }); };
-  const openEdit = (t: any) => { setForm({ component: t.component, amount: t.amount, description: t.description }); setModal({ open: true, editId: t.id }); };
+  const openAdd = () => { setForm({ component: '', amount: '', description: '' }); setModal({ open: true }); };
+  const openEdit = (t: any) => { setForm({ component: t.component, amount: String(t.amount), description: t.description }); setModal({ open: true, editId: t.id }); };
 
   const handleSave = async () => {
-    if (!form.component || form.amount <= 0) return;
+    if (!form.component || !form.amount || Number(form.amount) <= 0) return;
+    const payload = { ...form, amount: Number(form.amount) };
     if (modal.editId) {
-      await apiUpdateTariff(modal.editId, form);
+      await apiUpdateTariff(modal.editId, payload);
     } else {
-      await apiCreateTariff(form);
+      await apiCreateTariff(payload);
     }
     const updated = await apiGetTariffs();
     setTariffs(updated);
@@ -89,7 +90,7 @@ export default function TarifBiayaPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Nominal (Rp)</label>
-            <input type="number" className="input" value={form.amount} onChange={e => setForm({ ...form, amount: Number(e.target.value) })} />
+            <input type="text" inputMode="numeric" className="input" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value.replace(/\D/g, '') })} />
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Deskripsi</label>
