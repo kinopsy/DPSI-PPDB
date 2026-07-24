@@ -29,9 +29,10 @@ export default function BendaharaDashboard() {
 
   if (!user) return null;
 
+  const finalStatuses = ['lunas', 'ditolak_bayar', 'ditolak'];
   const lunas = payments.filter(p => p.payment_status === 'lunas').length;
-  const pending = payments.filter(p => p.payment_status === 'pending').length;
-  const revenue = lunas * 250000;
+  const pending = payments.filter(p => !finalStatuses.includes(p.payment_status)).length;
+  const totalAmount = payments.filter(p => p.payment_status === 'lunas').reduce((sum, p) => sum + (p.amount || 250000), 0);
 
   return (
     <div className="animate-fadeIn">
@@ -48,7 +49,7 @@ export default function BendaharaDashboard() {
           { icon: '💳', label: 'Transaksi', value: payments.length, color: 'text-slate-800', bg: 'bg-slate-50' },
           { icon: '✅', label: 'Lunas', value: lunas, color: 'text-blue-600', bg: 'bg-blue-50' },
           { icon: '⏳', label: 'Pending', value: pending, color: 'text-amber-600', bg: 'bg-amber-50' },
-          { icon: '💰', label: 'Pendapatan', value: formatCurrency(revenue), color: 'text-blue-600', bg: 'bg-blue-50', small: true },
+          { icon: '💰', label: 'Pendapatan', value: formatCurrency(totalAmount), color: 'text-blue-600', bg: 'bg-blue-50', small: true },
         ].map((s, i) => (
           <div key={i} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
             <div className={`w-10 h-10 rounded-xl ${s.bg} flex items-center justify-center text-lg mb-3`}>{s.icon}</div>
